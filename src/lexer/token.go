@@ -66,6 +66,9 @@ type Token struct {
 	lexeme interface{}
 }
 
+func NewToken(tag TokenTag, lexeme interface{}) Token { return Token{tag, lexeme} }
+
 func (t Token) ValueInt() int       { return t.lexeme.(int) }
 func (t Token) ValueBool() bool     { return t.lexeme.(bool) }
 func (t Token) ValueString() string { return t.lexeme.(string) }
+func (t Token) Type() TokenTag      { return t.tag }
