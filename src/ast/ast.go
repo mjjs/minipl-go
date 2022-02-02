@@ -33,17 +33,17 @@ type Stmt interface {
 }
 
 type Stmts struct{ Statements []Stmt }
-type ReadStmt struct{ TargetIdentifier lexer.Token }
+type ReadStmt struct{ TargetIdentifier Ident }
 type PrintStmt struct{ Expression Expr }
 type AssertStmt struct{ Expression Expr }
 type ForStmt struct {
-	Index      lexer.Token
+	Index      Ident
 	Low        Expr
 	High       Expr
 	Statements Stmts
 }
 type AssignStmt struct {
-	Identifier lexer.Token
+	Identifier Ident
 	Expression Expr
 }
 type DeclStmt struct {

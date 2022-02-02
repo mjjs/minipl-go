@@ -89,7 +89,7 @@ var parseTestCases = []struct {
 		expectedOutput: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.AssignStmt{
-					Identifier: lexer.NewToken(lexer.IDENT, "foo"),
+					Identifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "foo")},
 					Expression: ast.NullaryExpr{
 						Operand: ast.StringOpnd{Value: "bar"},
 					},
@@ -124,7 +124,7 @@ var parseTestCases = []struct {
 		expectedOutput: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.ForStmt{
-					Index: lexer.NewToken(lexer.IDENT, "i"),
+					Index: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
 					Low: ast.BinaryExpr{
 						Left:     ast.NumberOpnd{Value: 3},
 						Operator: lexer.NewToken(lexer.PLUS, nil),
@@ -137,7 +137,7 @@ var parseTestCases = []struct {
 					},
 					Statements: ast.Stmts{
 						Statements: []ast.Stmt{
-							ast.ReadStmt{TargetIdentifier: lexer.NewToken(lexer.IDENT, "x")},
+							ast.ReadStmt{TargetIdentifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "x")}},
 							ast.PrintStmt{
 								Expression: ast.NullaryExpr{
 									Operand: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "x")},

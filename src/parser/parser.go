@@ -87,7 +87,7 @@ func (p *Parser) parseStatement() ast.Stmt {
 		expr := p.parseExpression()
 
 		statement = ast.AssignStmt{
-			Identifier: ident,
+			Identifier: ast.Ident{Id: ident},
 			Expression: expr,
 		}
 
@@ -104,7 +104,7 @@ func (p *Parser) parseStatement() ast.Stmt {
 		p.eat(lexer.END)
 		p.eat(lexer.FOR)
 		statement = ast.ForStmt{
-			Index:      ident,
+			Index:      ast.Ident{Id: ident},
 			Low:        low,
 			High:       high,
 			Statements: statements,
@@ -112,7 +112,7 @@ func (p *Parser) parseStatement() ast.Stmt {
 
 	case lexer.READ:
 		p.eat(lexer.READ)
-		statement = ast.ReadStmt{TargetIdentifier: p.currentToken}
+		statement = ast.ReadStmt{TargetIdentifier: ast.Ident{Id: p.currentToken}}
 		p.eat(lexer.IDENT)
 
 	case lexer.PRINT:
