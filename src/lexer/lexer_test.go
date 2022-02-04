@@ -6,6 +6,7 @@ var getNextTokenTestCases = []struct {
 	name           string
 	input          string
 	expectedTokens []Token
+	shouldPanic    bool
 }{
 	{
 		name:           "Empty input returns EOF token",
@@ -33,9 +34,50 @@ var getNextTokenTestCases = []struct {
 		expectedTokens: []Token{{tag: INTEGER_LITERAL, lexeme: 666}},
 	},
 	{
+		name:        "Integer starting with zero",
+		input:       "0123",
+		shouldPanic: true,
+	},
+	{
 		name:           "String literal",
 		input:          "\"C-beams\"",
 		expectedTokens: []Token{{tag: STRING_LITERAL, lexeme: "C-beams"}},
+	},
+	{
+		name:        "Unterminated string literal 1",
+		input:       "\"Tännhauser gate\n\"",
+		shouldPanic: true,
+	},
+	{
+		name:        "Unterminated string literal 2",
+		input:       "\"Tännhauser gate\r\"",
+		shouldPanic: true,
+	},
+	{
+		name:  "String literal with escaped characters",
+		input: `"abc\\ def \""`,
+		expectedTokens: []Token{
+			{tag: STRING_LITERAL, lexeme: "abc\\ def \""},
+		},
+	},
+	{
+		name:  "String literal with newlines",
+		input: `"a\nb\r"`,
+		expectedTokens: []Token{
+			{tag: STRING_LITERAL, lexeme: "a\nb\r"},
+		},
+	},
+	{
+		name:  "String literal with tab character",
+		input: `"a:\tb"`,
+		expectedTokens: []Token{
+			{tag: STRING_LITERAL, lexeme: "a:\tb"},
+		},
+	},
+	{
+		name:        "Unsupported character",
+		input:       `🦊`,
+		shouldPanic: true,
 	},
 	{
 		name:           "Single ID",
@@ -260,19 +302,22 @@ var getNextTokenTestCases = []struct {
 			{tag: SEMI},
 		},
 	},
-	{
-		name:  "String with escaped characters",
-		input: `"abc\\ def \"\n"`,
-		expectedTokens: []Token{
-			{tag: STRING_LITERAL, lexeme: "abc\\ def \"\n"},
-		},
-	},
 }
 
 func TestGetNextToken(t *testing.T) {
 	for _, testCase := range getNextTokenTestCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			defer func() {
+				if r := recover(); r == nil && testCase.shouldPanic {
+					t.Error("Expected a panic")
+				}
+			}()
+
 			lexer := New(testCase.input)
+
+			if testCase.shouldPanic {
+				lexer.GetNextToken()
+			}
 
 			for _, token := range testCase.expectedTokens {
 				actual := lexer.GetNextToken()

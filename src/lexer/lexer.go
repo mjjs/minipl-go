@@ -6,6 +6,8 @@ import (
 	"unicode"
 )
 
+// Lexer is the main structure of the lexer package. It takes in the source code
+// of the MiniPL application and turns it into tokens.
 type Lexer struct {
 	sourceCode  []rune
 	currentChar rune
@@ -13,6 +15,8 @@ type Lexer struct {
 	eof         bool
 }
 
+// New returns a properly initialized pointer to a new Lexer instance using
+// sourceCode as the input program.
 func New(sourceCode string) *Lexer {
 	lexer := &Lexer{
 		sourceCode: []rune(sourceCode),
@@ -27,6 +31,8 @@ func New(sourceCode string) *Lexer {
 	return lexer
 }
 
+// GetNextToken returns the next token that the Lexer can parse from the
+// sourceCode given during initialization.
 func (l *Lexer) GetNextToken() Token {
 	for !l.eof {
 		if unicode.IsSpace(l.currentChar) {
@@ -39,6 +45,9 @@ func (l *Lexer) GetNextToken() Token {
 		}
 
 		if unicode.IsNumber(l.currentChar) {
+			if l.currentChar == '0' {
+				panic("Number beginning with 0")
+			}
 			return l.number()
 		}
 
@@ -144,6 +153,8 @@ func (l *Lexer) GetNextToken() Token {
 	return Token{tag: EOF}
 }
 
+// advance moves the position of the lexer forward one character and sets the
+// EOF flag to true if we have reached the end of the input program.
 func (l *Lexer) advance() {
 	l.pos++
 
@@ -165,12 +176,14 @@ func (l *Lexer) peek() (rune, bool) {
 	return l.sourceCode[l.pos+1], false
 }
 
+// skipWhitespace advances the lexer until the next non-whitespace character.
 func (l *Lexer) skipWhitespace() {
 	for !l.eof && unicode.IsSpace(l.currentChar) {
 		l.advance()
 	}
 }
 
+// skipLineComment advances the lexer until the end of a line.
 func (l *Lexer) skipLineComment() {
 	for !l.eof && l.currentChar != '\n' {
 		l.advance()
@@ -179,6 +192,8 @@ func (l *Lexer) skipLineComment() {
 	l.advance()
 }
 
+// skipBlockComment advances the lexer until it has skipped all the characters
+// inside a block comment.
 func (l *Lexer) skipBlockComment() {
 	for !l.eof {
 		if l.currentChar != '*' {
@@ -196,10 +211,13 @@ func (l *Lexer) skipBlockComment() {
 	}
 }
 
+// ident reads a A-Za-z0-9_ string from the input program and returns an IDENT
+// token with the read string as a lexeme.
 func (l *Lexer) ident() Token {
 	id := ""
 
-	for !l.eof && unicode.In(l.currentChar, unicode.Number, unicode.Letter) {
+	// TODO: Check if unicode.X is allowed
+	for !l.eof && unicode.In(l.currentChar, unicode.Number, unicode.Letter) || l.currentChar == '_' {
 		id += string(l.currentChar)
 		l.advance()
 	}
@@ -212,6 +230,9 @@ func (l *Lexer) ident() Token {
 	return Token{tag: IDENT, lexeme: id}
 }
 
+// number reads a number from the input program and returns an INTEGER_LITERAL
+// token with the number as a lexeme. MiniPL only supports integers, so we
+// do not consider floating point numbers.
 func (l *Lexer) number() Token {
 	numString := ""
 
@@ -228,6 +249,8 @@ func (l *Lexer) number() Token {
 	return Token{tag: INTEGER_LITERAL, lexeme: num}
 }
 
+// string reads a string from the input program and returns a STRING_LITERAL
+// token containing the read string as a lexeme.
 func (l *Lexer) string() Token {
 	str := ""
 
@@ -255,7 +278,7 @@ func (l *Lexer) string() Token {
 			break
 		}
 
-		if l.currentChar == '\n' {
+		if l.currentChar == '\n' || l.currentChar == '\r' {
 			panic("Unterminated string literal")
 		}
 
