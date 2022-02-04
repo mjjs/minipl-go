@@ -9,11 +9,14 @@ import (
 
 type Lexer interface{ GetNextToken() lexer.Token }
 
+// Parser is the main struct of the parser package. The Parser should be
+// initialized with New instead of used directly.
 type Parser struct {
 	lexer        Lexer
 	currentToken lexer.Token
 }
 
+// New returns a properly initialized pointer instance to a Parser.
 func New(lexer Lexer) *Parser {
 	if lexer == nil {
 		panic("Attempting to construct a Parser with a nil Lexer")
@@ -25,6 +28,9 @@ func New(lexer Lexer) *Parser {
 	}
 }
 
+// Parse reads tokens from the lexer and verifies that the program is
+// syntactically valid. An abstract syntax tree and an optional error is
+// returned.
 func (p *Parser) Parse() (ast.Stmts, error) {
 	root := p.parseStatements()
 
@@ -39,6 +45,8 @@ func (p *Parser) Parse() (ast.Stmts, error) {
 	return root, nil
 }
 
+// parseStatements goes through all the statements of the lexer and parses
+// them returning a Stmts node indicating the root of the abstract syntax tree.
 func (p *Parser) parseStatements() ast.Stmts {
 	statements := []ast.Stmt{}
 
@@ -51,6 +59,15 @@ func (p *Parser) parseStatements() ast.Stmts {
 	return ast.Stmts{Statements: statements}
 }
 
+// parseStatement parses a statement using the following grammar rules.
+//
+// <stmt> ::= “var” <var_ident> “:” <type> [ “:=” <expr> ]
+//            | <var_ident> “:=” <expr>
+//            | “for” <var_ident> “in” <expr> “..” <expr> “do”
+//              <stmts> “end” “for”
+//            | “read” <var_ident>
+//            | “print” <expr>
+//            | “assert” “(” <expr> “)”
 func (p *Parser) parseStatement() ast.Stmt {
 	var statement ast.Stmt
 
@@ -134,6 +151,10 @@ func (p *Parser) parseStatement() ast.Stmt {
 	return statement
 }
 
+// parseExpression parses an expression with the following grammar rules.
+//
+// <expr> ::= <opnd> <op> <opnd>
+//            | [ <unary_opnd> ] <opnd>
 func (p *Parser) parseExpression() ast.Expr {
 	if p.currentToken.Type() == lexer.NOT {
 		unary := p.currentToken
@@ -165,6 +186,14 @@ func (p *Parser) parseExpression() ast.Expr {
 	}
 }
 
+// parseOperand parses a valid operand with the following grammar rules.
+//
+// <opnd> ::= <int>
+//            | <string>
+//            | <var_ident>
+//            | “(” <expr> “)”
+//
+// <var_ident> ::= <ident>
 func (p *Parser) parseOperand() ast.Node {
 	switch p.currentToken.Type() {
 	case lexer.INTEGER_LITERAL:
@@ -192,6 +221,7 @@ func (p *Parser) parseOperand() ast.Node {
 	panic(fmt.Sprintf("Syntax error: unexpected %v", p.currentToken.Type()))
 }
 
+// isStatement checks whether tokenType should be parsed as a statement node or not.
 func (p *Parser) isStatement(tokenType lexer.TokenTag) bool {
 	statementTypes := []lexer.TokenTag{
 		lexer.VAR,
@@ -211,6 +241,7 @@ func (p *Parser) isStatement(tokenType lexer.TokenTag) bool {
 	return false
 }
 
+// isOperator checks whether tokenType is a valid operator or not.
 func (p *Parser) isOperator(tokenType lexer.TokenTag) bool {
 	operatorTypes := []lexer.TokenTag{
 		lexer.PLUS,
@@ -231,6 +262,8 @@ func (p *Parser) isOperator(tokenType lexer.TokenTag) bool {
 	return false
 }
 
+// eat checks that the given tokenType corresponds to the currently held token
+// and consumes it. If the tokens do not match, eat panics.
 func (p *Parser) eat(tokenType lexer.TokenTag) {
 	if p.currentToken.Type() == tokenType {
 		p.currentToken = p.lexer.GetNextToken()
@@ -243,6 +276,8 @@ func (p *Parser) eat(tokenType lexer.TokenTag) {
 	}
 }
 
+// eatType consumes a type token. If the current token is not a type token,
+// eatType panics.
 func (p *Parser) eatType() {
 	if p.currentToken.Type() == lexer.INTEGER {
 		p.eat(lexer.INTEGER)
@@ -258,6 +293,7 @@ func (p *Parser) eatType() {
 	}
 }
 
+// eatOperator consumes an operator token or panics.
 func (p *Parser) eatOperator() {
 	if p.currentToken.Type() == lexer.PLUS {
 		p.eat(lexer.PLUS)
