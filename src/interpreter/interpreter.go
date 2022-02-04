@@ -1,43 +1,31 @@
 package interpreter
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/mjjs/minipl-go/src/ast"
 	"github.com/mjjs/minipl-go/src/lexer"
 	"github.com/mjjs/minipl-go/src/stack"
 )
 
-type Lexer interface {
-	GetNextToken() lexer.Token
-}
-
-type Parser interface {
-	Parse() (ast.Stmts, error)
-}
-
 type Interpreter struct {
-	Lexer  Lexer
-	Parser Parser
-
 	stack *stack.Stack
+
+	variables map[string]interface{}
 }
 
-func New(lexer Lexer, parser Parser) *Interpreter {
+func New() *Interpreter {
 	return &Interpreter{
-		Lexer:  lexer,
-		Parser: parser,
-		stack:  stack.New(),
+		stack:     stack.New(),
+		variables: make(map[string]interface{}),
 	}
 }
 
-func (i *Interpreter) Run() {
-	program, err := i.Parser.Parse()
-	if err != nil {
-		panic(err)
-	}
-
-	program.Accept(i)
+func (i *Interpreter) Run(stmts ast.Stmts) {
+	stmts.Accept(i)
 }
 
 func (i *Interpreter) VisitStmts(node ast.Stmts) {
@@ -46,15 +34,71 @@ func (i *Interpreter) VisitStmts(node ast.Stmts) {
 	}
 }
 
-func (i *Interpreter) VisitAssignStmt(node ast.AssignStmt) {}
-func (i *Interpreter) VisitDeclStmt(node ast.DeclStmt)     {}
+func (i *Interpreter) VisitAssignStmt(node ast.AssignStmt) {
+	varName := node.Identifier.Id.ValueString()
+	node.Expression.Accept(i)
+	value := i.stack.Pop()
+	i.variables[varName] = value
+}
 
-func (i *Interpreter) VisitForStmt(node ast.ForStmt) {}
+func (i *Interpreter) VisitDeclStmt(node ast.DeclStmt) {
+	varName := node.Identifier.ValueString()
+	var value interface{}
 
-func (i *Interpreter) VisitReadStmt(node ast.ReadStmt) {}
+	if node.Expression != nil {
+		node.Expression.Accept(i)
+		value = i.stack.Pop()
+	} else {
+		typ := node.VariableType.Type()
+		if typ == lexer.INTEGER {
+			value = 0
+		} else if typ == lexer.STRING {
+			value = ""
+		} else {
+			value = false
+		}
+	}
+
+	i.variables[varName] = value
+}
+
+func (i *Interpreter) VisitForStmt(node ast.ForStmt) {
+	idx := node.Index.Id.ValueString()
+
+	node.Low.Accept(i)
+	low := i.stack.Pop().(int)
+
+	node.High.Accept(i)
+	high := i.stack.Pop().(int)
+
+	for j := low; j < high; j++ {
+		i.variables[idx] = j
+		node.Statements.Accept(i)
+	}
+}
+
+func (i *Interpreter) VisitReadStmt(node ast.ReadStmt) {
+	varName := node.TargetIdentifier.Id.ValueString()
+
+	x := i.variables[varName]
+
+	r := bufio.NewReader(os.Stdin)
+
+	if _, ok := x.(int); ok {
+		str, _ := r.ReadString('\n')
+		x, _ = strconv.Atoi(str)
+		i.variables[varName] = x
+	} else if _, ok := x.(string); ok {
+		x, _ = r.ReadString('\n')
+		i.variables[varName] = x
+	} else {
+		panic("WTF NOT A PROPER TYPE (bool not supported yet!)")
+	}
+}
+
 func (i *Interpreter) VisitPrintStmt(node ast.PrintStmt) {
 	node.Expression.Accept(i)
-	fmt.Println(i.stack.Pop())
+	fmt.Print(i.stack.Pop())
 }
 func (i *Interpreter) VisitAssertStmt(node ast.AssertStmt) {
 	node.Expression.Accept(i)
@@ -80,6 +124,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 
 			if leftOk && rightOk {
 				i.stack.Push(l + r)
+				return
 			}
 		}
 
@@ -89,6 +134,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 
 			if leftOk && rightOk {
 				i.stack.Push(l + r)
+				return
 			}
 		}
 
@@ -98,6 +144,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 
 		if leftOk && rightOk {
 			i.stack.Push(l - r)
+			return
 		}
 
 	case lexer.INTEGER_DIV:
@@ -106,6 +153,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 
 		if leftOk && rightOk {
 			i.stack.Push(l / r)
+			return
 		}
 
 	case lexer.MULTIPLY:
@@ -114,6 +162,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 
 		if leftOk && rightOk {
 			i.stack.Push(l * r)
+			return
 		}
 
 	case lexer.AND:
@@ -122,6 +171,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 
 		if leftOk && rightOk {
 			i.stack.Push(l && r)
+			return
 		}
 
 	case lexer.LT:
@@ -130,10 +180,12 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 
 		if leftOk && rightOk {
 			i.stack.Push(l < r)
+			return
 		}
 
 	case lexer.EQ:
 		i.stack.Push(left == right)
+		return
 
 	default:
 		panic(fmt.Sprintf("Unsupported operator %v", operator))
@@ -166,4 +218,6 @@ func (i *Interpreter) VisitStringOpnd(node ast.StringOpnd) {
 	i.stack.Push(node.Value)
 }
 
-func (i *Interpreter) VisitIdent(node ast.Ident) {}
+func (i *Interpreter) VisitIdent(node ast.Ident) {
+	i.stack.Push(i.variables[node.Id.ValueString()])
+}

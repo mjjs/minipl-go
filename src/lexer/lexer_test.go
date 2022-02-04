@@ -262,9 +262,9 @@ var getNextTokenTestCases = []struct {
 	},
 	{
 		name:  "String with escaped characters",
-		input: `"abc\\ def \""`,
+		input: `"abc\\ def \"\n"`,
 		expectedTokens: []Token{
-			{tag: STRING_LITERAL, lexeme: `abc\ def "`},
+			{tag: STRING_LITERAL, lexeme: "abc\\ def \"\n"},
 		},
 	},
 }

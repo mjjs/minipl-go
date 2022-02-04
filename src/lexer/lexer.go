@@ -234,7 +234,18 @@ func (l *Lexer) string() Token {
 	for !l.eof {
 		if l.currentChar == '\\' {
 			l.advance()
-			str += string(l.currentChar)
+
+			switch l.currentChar {
+			case 'n':
+				str += "\n"
+			case 't':
+				str += "\t"
+			case 'r':
+				str += "\r"
+			default:
+				str += string(l.currentChar)
+			}
+
 			l.advance()
 			continue
 		}
@@ -242,6 +253,10 @@ func (l *Lexer) string() Token {
 		if l.currentChar == '"' {
 			l.advance()
 			break
+		}
+
+		if l.currentChar == '\n' {
+			panic("Unterminated string literal")
 		}
 
 		str += string(l.currentChar)
