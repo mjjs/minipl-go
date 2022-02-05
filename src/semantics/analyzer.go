@@ -76,6 +76,17 @@ func (i *Analyzer) VisitAssignStmt(node ast.AssignStmt) {
 	node.Identifier.Accept(i)
 	lsType := i.lastType
 
+	symbol, _ := i.symbols.Get(node.Identifier.Id.ValueString())
+
+	if symbol.Locked() {
+		i.err = fmt.Errorf(
+			"Cannot assign to a locked variable %s",
+			node.Identifier.Id.ValueString(),
+		)
+
+		return
+	}
+
 	node.Expression.Accept(i)
 	rsType := i.lastType
 
@@ -92,6 +103,8 @@ func (i *Analyzer) VisitForStmt(node ast.ForStmt) {
 
 	node.Index.Accept(i)
 	indexType := i.lastType
+
+	i.symbols.Lock(node.Index.Id.ValueString())
 
 	node.Low.Accept(i)
 	lowType := i.lastType
@@ -115,6 +128,8 @@ func (i *Analyzer) VisitForStmt(node ast.ForStmt) {
 	}
 
 	node.Statements.Accept(i)
+
+	i.symbols.UnLock(node.Index.Id.ValueString())
 }
 
 func (i *Analyzer) VisitReadStmt(node ast.ReadStmt) {
@@ -248,11 +263,11 @@ func (i *Analyzer) VisitIdent(node ast.Ident) {
 	}
 
 	name := node.Id.ValueString()
-	symbolType, exists := i.symbols.Get(name)
+	symbol, exists := i.symbols.Get(name)
 	if !exists {
 		i.err = fmt.Errorf("Variable %s has not been declared", name)
 		return
 	}
 
-	i.lastType = symbolType
+	i.lastType = symbol.Type()
 }

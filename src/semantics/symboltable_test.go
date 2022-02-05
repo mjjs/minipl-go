@@ -7,13 +7,13 @@ func TestGetReturnsTrueWhenVariableExistsInTable(t *testing.T) {
 
 	st.Insert("x", INTEGER)
 
-	symbolType, exists := st.Get("x")
+	symbol, exists := st.Get("x")
 	if !exists {
 		t.Error("Expected true, got false")
 	}
 
-	if symbolType != INTEGER {
-		t.Errorf("Expected %s, got %s", INTEGER, symbolType)
+	if symbol.Type() != INTEGER {
+		t.Errorf("Expected %s, got %s", INTEGER, symbol.Type())
 	}
 }
 
@@ -39,5 +39,38 @@ func TestStringRepresentationsReturnsCorrectTypeNames(t *testing.T) {
 	}
 	if b != "bool" {
 		t.Errorf("Expected bool, got %s", b)
+	}
+}
+
+func TestLockSetsVariableAsLocked(t *testing.T) {
+	st := NewSymbolTable()
+	st.Insert("foo", INTEGER)
+
+	st.Lock("foo")
+
+	foo, exists := st.Get("foo")
+	if !exists {
+		t.Error("Variable got deleted during locking")
+	}
+
+	if !foo.Locked() {
+		t.Errorf("Expected foo to be locked")
+	}
+}
+
+func TestUnLockRemovesLockFromVariable(t *testing.T) {
+	st := NewSymbolTable()
+	st.Insert("foo", INTEGER)
+
+	st.Lock("foo")
+	st.UnLock("foo")
+
+	foo, exists := st.Get("foo")
+	if !exists {
+		t.Error("Variable got deleted during unlock")
+	}
+
+	if foo.Locked() {
+		t.Errorf("Expected foo to be unlocked")
 	}
 }

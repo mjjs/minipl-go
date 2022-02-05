@@ -701,6 +701,53 @@ var analyzerTestCases = []struct {
 		shouldError: true,
 	},
 	{
+		name: "For loop index modified inside loop",
+		input: ast.Stmts{
+			Statements: []ast.Stmt{
+				ast.DeclStmt{
+					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
+					VariableType: lexer.NewToken(lexer.INTEGER, nil),
+				},
+				ast.ForStmt{
+					Index: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+					Low:   ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 0}},
+					High:  ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 5}},
+					Statements: ast.Stmts{
+						Statements: []ast.Stmt{
+							ast.AssignStmt{
+								Identifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+								Expression: ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 15}},
+							},
+						},
+					},
+				},
+			},
+		},
+		shouldError: true,
+	},
+	{
+		name: "For loop index modified after loop",
+		input: ast.Stmts{
+			Statements: []ast.Stmt{
+				ast.DeclStmt{
+					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
+					VariableType: lexer.NewToken(lexer.INTEGER, nil),
+				},
+				ast.ForStmt{
+					Index:      ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+					Low:        ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 0}},
+					High:       ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 5}},
+					Statements: ast.Stmts{},
+				},
+				ast.AssignStmt{
+					Identifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+					Expression: ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 15}},
+				},
+			},
+		},
+		shouldError: false,
+	},
+	{
 		name: "Valid for statement",
 		input: ast.Stmts{
 			Statements: []ast.Stmt{
