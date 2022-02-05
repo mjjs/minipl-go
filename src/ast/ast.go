@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/mjjs/minipl-go/src/lexer"
+import "github.com/mjjs/minipl-go/src/token"
 
 // Visitor defines an interface for a visitor to the abstract syntax tree.
 // This interface is used for defining separate compiler passes that need to
@@ -74,8 +74,8 @@ type AssignStmt struct {
 
 // DeclStmt defines a declaration of a new variable.
 type DeclStmt struct {
-	Identifier   lexer.Token
-	VariableType lexer.Token
+	Identifier   token.Token
+	VariableType token.Token
 	// nil when no value is assigned to the variable during declaration
 	Expression Expr
 }
@@ -83,13 +83,13 @@ type DeclStmt struct {
 // BinaryExpr is an expression with two operands and and operator.
 type BinaryExpr struct {
 	Left     Node
-	Operator lexer.Token
+	Operator token.Token
 	Right    Node
 }
 
 // UnaryExpr is an expression with one operand preceded by an unary operator.
 type UnaryExpr struct {
-	Unary   lexer.Token
+	Unary   token.Token
 	Operand Node
 }
 
@@ -105,7 +105,7 @@ type NumberOpnd struct{ Value int }
 type StringOpnd struct{ Value string }
 
 // Ident is an identifier node.
-type Ident struct{ Id lexer.Token }
+type Ident struct{ Id token.Token }
 
 func (n Prog) Accept(v Visitor)        { v.VisitProg(n) }
 func (n Stmts) Accept(v Visitor)       { v.VisitStmts(n) }

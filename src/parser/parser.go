@@ -4,16 +4,16 @@ import (
 	"fmt"
 
 	"github.com/mjjs/minipl-go/src/ast"
-	"github.com/mjjs/minipl-go/src/lexer"
+	"github.com/mjjs/minipl-go/src/token"
 )
 
-type Lexer interface{ GetNextToken() lexer.Token }
+type Lexer interface{ GetNextToken() token.Token }
 
 // Parser is the main struct of the parser package. The Parser should be
 // initialized with New instead of used directly.
 type Parser struct {
 	lexer        Lexer
-	currentToken lexer.Token
+	currentToken token.Token
 }
 
 // New returns a properly initialized pointer instance to a Parser.
@@ -34,10 +34,10 @@ func New(lexer Lexer) *Parser {
 func (p *Parser) Parse() (ast.Prog, error) {
 	statements := p.parseStatements()
 
-	if p.currentToken.Type() != lexer.EOF {
+	if p.currentToken.Type() != token.EOF {
 		return ast.Prog{}, fmt.Errorf(
 			"Parsing the program failed. Expected %v, found %v",
-			lexer.EOF,
+			token.EOF,
 			p.currentToken.Type(),
 		)
 	}
@@ -72,14 +72,14 @@ func (p *Parser) parseStatement() ast.Stmt {
 	var statement ast.Stmt
 
 	switch p.currentToken.Type() {
-	case lexer.VAR:
-		p.eat(lexer.VAR)
+	case token.VAR:
+		p.eat(token.VAR)
 		ident := p.currentToken
-		p.eat(lexer.IDENT)
-		p.eat(lexer.COLON)
+		p.eat(token.IDENT)
+		p.eat(token.COLON)
 		variableType := p.currentToken
 		p.eatType()
-		if p.currentToken.Type() != lexer.ASSIGN {
+		if p.currentToken.Type() != token.ASSIGN {
 			statement = ast.DeclStmt{
 				Identifier:   ident,
 				VariableType: variableType,
@@ -88,7 +88,7 @@ func (p *Parser) parseStatement() ast.Stmt {
 			break
 		}
 
-		p.eat(lexer.ASSIGN)
+		p.eat(token.ASSIGN)
 		expr := p.parseExpression()
 
 		statement = ast.DeclStmt{
@@ -97,10 +97,10 @@ func (p *Parser) parseStatement() ast.Stmt {
 			Expression:   expr,
 		}
 
-	case lexer.IDENT:
+	case token.IDENT:
 		ident := p.currentToken
-		p.eat(lexer.IDENT)
-		p.eat(lexer.ASSIGN)
+		p.eat(token.IDENT)
+		p.eat(token.ASSIGN)
 		expr := p.parseExpression()
 
 		statement = ast.AssignStmt{
@@ -108,18 +108,18 @@ func (p *Parser) parseStatement() ast.Stmt {
 			Expression: expr,
 		}
 
-	case lexer.FOR:
-		p.eat(lexer.FOR)
+	case token.FOR:
+		p.eat(token.FOR)
 		ident := p.currentToken
-		p.eat(lexer.IDENT)
-		p.eat(lexer.IN)
+		p.eat(token.IDENT)
+		p.eat(token.IN)
 		low := p.parseExpression()
-		p.eat(lexer.DOTDOT)
+		p.eat(token.DOTDOT)
 		high := p.parseExpression()
-		p.eat(lexer.DO)
+		p.eat(token.DO)
 		statements := p.parseStatements()
-		p.eat(lexer.END)
-		p.eat(lexer.FOR)
+		p.eat(token.END)
+		p.eat(token.FOR)
 		statement = ast.ForStmt{
 			Index:      ast.Ident{Id: ident},
 			Low:        low,
@@ -127,26 +127,26 @@ func (p *Parser) parseStatement() ast.Stmt {
 			Statements: statements,
 		}
 
-	case lexer.READ:
-		p.eat(lexer.READ)
+	case token.READ:
+		p.eat(token.READ)
 		statement = ast.ReadStmt{TargetIdentifier: ast.Ident{Id: p.currentToken}}
-		p.eat(lexer.IDENT)
+		p.eat(token.IDENT)
 
-	case lexer.PRINT:
-		p.eat(lexer.PRINT)
+	case token.PRINT:
+		p.eat(token.PRINT)
 		statement = ast.PrintStmt{Expression: p.parseExpression()}
 
-	case lexer.ASSERT:
-		p.eat(lexer.ASSERT)
-		p.eat(lexer.LPAREN)
+	case token.ASSERT:
+		p.eat(token.ASSERT)
+		p.eat(token.LPAREN)
 		statement = ast.AssertStmt{Expression: p.parseExpression()}
-		p.eat(lexer.RPAREN)
+		p.eat(token.RPAREN)
 
 	default:
 		panic("Parse error")
 	}
 
-	p.eat(lexer.SEMI)
+	p.eat(token.SEMI)
 
 	return statement
 }
@@ -156,9 +156,9 @@ func (p *Parser) parseStatement() ast.Stmt {
 // <expr> ::= <opnd> <op> <opnd>
 //            | [ <unary_opnd> ] <opnd>
 func (p *Parser) parseExpression() ast.Expr {
-	if p.currentToken.Type() == lexer.NOT {
+	if p.currentToken.Type() == token.NOT {
 		unary := p.currentToken
-		p.eat(lexer.NOT)
+		p.eat(token.NOT)
 
 		return ast.UnaryExpr{
 			Unary:   unary,
@@ -196,25 +196,25 @@ func (p *Parser) parseExpression() ast.Expr {
 // <var_ident> ::= <ident>
 func (p *Parser) parseOperand() ast.Node {
 	switch p.currentToken.Type() {
-	case lexer.INTEGER_LITERAL:
+	case token.INTEGER_LITERAL:
 		val := p.currentToken.ValueInt()
-		p.eat(lexer.INTEGER_LITERAL)
+		p.eat(token.INTEGER_LITERAL)
 		return ast.NumberOpnd{Value: val}
 
-	case lexer.STRING_LITERAL:
+	case token.STRING_LITERAL:
 		val := p.currentToken.ValueString()
-		p.eat(lexer.STRING_LITERAL)
+		p.eat(token.STRING_LITERAL)
 		return ast.StringOpnd{Value: val}
 
-	case lexer.IDENT:
-		token := p.currentToken
-		p.eat(lexer.IDENT)
-		return ast.Ident{Id: token}
+	case token.IDENT:
+		t := p.currentToken
+		p.eat(token.IDENT)
+		return ast.Ident{Id: t}
 
-	case lexer.LPAREN:
-		p.eat(lexer.LPAREN)
+	case token.LPAREN:
+		p.eat(token.LPAREN)
 		expr := p.parseExpression()
-		p.eat(lexer.RPAREN)
+		p.eat(token.RPAREN)
 		return expr
 	}
 
@@ -222,14 +222,14 @@ func (p *Parser) parseOperand() ast.Node {
 }
 
 // isStatement checks whether tokenType should be parsed as a statement node or not.
-func (p *Parser) isStatement(tokenType lexer.TokenTag) bool {
-	statementTypes := []lexer.TokenTag{
-		lexer.VAR,
-		lexer.IDENT,
-		lexer.FOR,
-		lexer.READ,
-		lexer.PRINT,
-		lexer.ASSERT,
+func (p *Parser) isStatement(tokenType token.TokenTag) bool {
+	statementTypes := []token.TokenTag{
+		token.VAR,
+		token.IDENT,
+		token.FOR,
+		token.READ,
+		token.PRINT,
+		token.ASSERT,
 	}
 
 	for _, t := range statementTypes {
@@ -242,15 +242,15 @@ func (p *Parser) isStatement(tokenType lexer.TokenTag) bool {
 }
 
 // isOperator checks whether tokenType is a valid operator or not.
-func (p *Parser) isOperator(tokenType lexer.TokenTag) bool {
-	operatorTypes := []lexer.TokenTag{
-		lexer.PLUS,
-		lexer.MINUS,
-		lexer.MULTIPLY,
-		lexer.INTEGER_DIV,
-		lexer.LT,
-		lexer.EQ,
-		lexer.AND,
+func (p *Parser) isOperator(tokenType token.TokenTag) bool {
+	operatorTypes := []token.TokenTag{
+		token.PLUS,
+		token.MINUS,
+		token.MULTIPLY,
+		token.INTEGER_DIV,
+		token.LT,
+		token.EQ,
+		token.AND,
 	}
 
 	for _, t := range operatorTypes {
@@ -264,7 +264,7 @@ func (p *Parser) isOperator(tokenType lexer.TokenTag) bool {
 
 // eat checks that the given tokenType corresponds to the currently held token
 // and consumes it. If the tokens do not match, eat panics.
-func (p *Parser) eat(tokenType lexer.TokenTag) {
+func (p *Parser) eat(tokenType token.TokenTag) {
 	if p.currentToken.Type() == tokenType {
 		p.currentToken = p.lexer.GetNextToken()
 	} else {
@@ -279,12 +279,12 @@ func (p *Parser) eat(tokenType lexer.TokenTag) {
 // eatType consumes a type token. If the current token is not a type token,
 // eatType panics.
 func (p *Parser) eatType() {
-	if p.currentToken.Type() == lexer.INTEGER {
-		p.eat(lexer.INTEGER)
-	} else if p.currentToken.Type() == lexer.STRING {
-		p.eat(lexer.STRING)
-	} else if p.currentToken.Type() == lexer.BOOLEAN {
-		p.eat(lexer.BOOLEAN)
+	if p.currentToken.Type() == token.INTEGER {
+		p.eat(token.INTEGER)
+	} else if p.currentToken.Type() == token.STRING {
+		p.eat(token.STRING)
+	} else if p.currentToken.Type() == token.BOOLEAN {
+		p.eat(token.BOOLEAN)
 	} else {
 		panic(fmt.Sprintf(
 			"Syntax error: expected a type, got %v",
@@ -295,20 +295,20 @@ func (p *Parser) eatType() {
 
 // eatOperator consumes an operator token or panics.
 func (p *Parser) eatOperator() {
-	if p.currentToken.Type() == lexer.PLUS {
-		p.eat(lexer.PLUS)
-	} else if p.currentToken.Type() == lexer.MINUS {
-		p.eat(lexer.MINUS)
-	} else if p.currentToken.Type() == lexer.MULTIPLY {
-		p.eat(lexer.MULTIPLY)
-	} else if p.currentToken.Type() == lexer.INTEGER_DIV {
-		p.eat(lexer.INTEGER_DIV)
-	} else if p.currentToken.Type() == lexer.LT {
-		p.eat(lexer.LT)
-	} else if p.currentToken.Type() == lexer.EQ {
-		p.eat(lexer.EQ)
-	} else if p.currentToken.Type() == lexer.AND {
-		p.eat(lexer.AND)
+	if p.currentToken.Type() == token.PLUS {
+		p.eat(token.PLUS)
+	} else if p.currentToken.Type() == token.MINUS {
+		p.eat(token.MINUS)
+	} else if p.currentToken.Type() == token.MULTIPLY {
+		p.eat(token.MULTIPLY)
+	} else if p.currentToken.Type() == token.INTEGER_DIV {
+		p.eat(token.INTEGER_DIV)
+	} else if p.currentToken.Type() == token.LT {
+		p.eat(token.LT)
+	} else if p.currentToken.Type() == token.EQ {
+		p.eat(token.EQ)
+	} else if p.currentToken.Type() == token.AND {
+		p.eat(token.AND)
 	} else {
 		panic(fmt.Sprintf(
 			"Syntax error: expected an operator, got %v",

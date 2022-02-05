@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/mjjs/minipl-go/src/ast"
-	"github.com/mjjs/minipl-go/src/lexer"
+	"github.com/mjjs/minipl-go/src/token"
 )
 
 var analyzerTestCases = []struct {
@@ -18,7 +18,7 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.AssignStmt{
-					Identifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "x")},
+					Identifier: ast.Ident{Id: token.NewToken(token.IDENT, "x")},
 					Expression: ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 				},
 			},
@@ -31,12 +31,12 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
-					VariableType: lexer.NewToken(lexer.STRING, nil),
+					Identifier:   token.NewToken(token.IDENT, "foo"),
+					VariableType: token.NewToken(token.STRING, nil),
 					Expression:   ast.NullaryExpr{Operand: ast.StringOpnd{Value: "12345"}},
 				},
 				ast.AssignStmt{
-					Identifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "foo")},
+					Identifier: ast.Ident{Id: token.NewToken(token.IDENT, "foo")},
 					Expression: ast.NullaryExpr{Operand: ast.StringOpnd{Value: "67890"}},
 				},
 			},
@@ -49,11 +49,11 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
-					VariableType: lexer.NewToken(lexer.STRING, nil),
+					Identifier:   token.NewToken(token.IDENT, "foo"),
+					VariableType: token.NewToken(token.STRING, nil),
 				},
 				ast.AssignStmt{
-					Identifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "foo")},
+					Identifier: ast.Ident{Id: token.NewToken(token.IDENT, "foo")},
 					Expression: ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 67890}},
 				},
 			},
@@ -67,12 +67,12 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
-					VariableType: lexer.NewToken(lexer.INTEGER, nil),
+					Identifier:   token.NewToken(token.IDENT, "foo"),
+					VariableType: token.NewToken(token.INTEGER, nil),
 				},
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
-					VariableType: lexer.NewToken(lexer.INTEGER, nil),
+					Identifier:   token.NewToken(token.IDENT, "foo"),
+					VariableType: token.NewToken(token.INTEGER, nil),
 				},
 			},
 		},
@@ -99,7 +99,7 @@ var analyzerTestCases = []struct {
 				ast.AssertStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-						Operator: lexer.NewToken(lexer.EQ, nil),
+						Operator: token.NewToken(token.EQ, nil),
 						Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 					},
 				},
@@ -114,10 +114,10 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
-					VariableType: lexer.NewToken(lexer.BOOLEAN, nil),
+					Identifier:   token.NewToken(token.IDENT, "foo"),
+					VariableType: token.NewToken(token.BOOLEAN, nil),
 					Expression: ast.UnaryExpr{
-						Unary:   lexer.NewToken(lexer.NOT, nil),
+						Unary:   token.NewToken(token.NOT, nil),
 						Operand: ast.StringOpnd{Value: "12345"},
 					},
 				},
@@ -131,11 +131,11 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
-					VariableType: lexer.NewToken(lexer.BOOLEAN, nil),
+					Identifier:   token.NewToken(token.IDENT, "foo"),
+					VariableType: token.NewToken(token.BOOLEAN, nil),
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-						Operator: lexer.NewToken(lexer.EQ, nil),
+						Operator: token.NewToken(token.EQ, nil),
 						Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 					},
 				},
@@ -152,7 +152,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
-						Operator: lexer.NewToken(lexer.EQ, nil),
+						Operator: token.NewToken(token.EQ, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					},
 				},
@@ -168,7 +168,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "a"}},
-						Operator: lexer.NewToken(lexer.EQ, nil),
+						Operator: token.NewToken(token.EQ, nil),
 						Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "b"}},
 					},
 				},
@@ -185,13 +185,13 @@ var analyzerTestCases = []struct {
 					Expression: ast.BinaryExpr{
 						Left: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
-						Operator: lexer.NewToken(lexer.EQ, nil),
+						Operator: token.NewToken(token.EQ, nil),
 						Right: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
 					},
@@ -208,7 +208,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "6"}},
-						Operator: lexer.NewToken(lexer.EQ, nil),
+						Operator: token.NewToken(token.EQ, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 6}},
 					},
 				},
@@ -225,7 +225,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
-						Operator: lexer.NewToken(lexer.PLUS, nil),
+						Operator: token.NewToken(token.PLUS, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					},
 				},
@@ -241,7 +241,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "a"}},
-						Operator: lexer.NewToken(lexer.PLUS, nil),
+						Operator: token.NewToken(token.PLUS, nil),
 						Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "b"}},
 					},
 				},
@@ -258,13 +258,13 @@ var analyzerTestCases = []struct {
 					Expression: ast.BinaryExpr{
 						Left: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
-						Operator: lexer.NewToken(lexer.PLUS, nil),
+						Operator: token.NewToken(token.PLUS, nil),
 						Right: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
 					},
@@ -281,7 +281,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "6"}},
-						Operator: lexer.NewToken(lexer.PLUS, nil),
+						Operator: token.NewToken(token.PLUS, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 6}},
 					},
 				},
@@ -298,7 +298,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
-						Operator: lexer.NewToken(lexer.MINUS, nil),
+						Operator: token.NewToken(token.MINUS, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					},
 				},
@@ -314,7 +314,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "a"}},
-						Operator: lexer.NewToken(lexer.MINUS, nil),
+						Operator: token.NewToken(token.MINUS, nil),
 						Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "b"}},
 					},
 				},
@@ -331,13 +331,13 @@ var analyzerTestCases = []struct {
 					Expression: ast.BinaryExpr{
 						Left: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
-						Operator: lexer.NewToken(lexer.MINUS, nil),
+						Operator: token.NewToken(token.MINUS, nil),
 						Right: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
 					},
@@ -354,7 +354,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "6"}},
-						Operator: lexer.NewToken(lexer.MINUS, nil),
+						Operator: token.NewToken(token.MINUS, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 6}},
 					},
 				},
@@ -371,7 +371,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
-						Operator: lexer.NewToken(lexer.MULTIPLY, nil),
+						Operator: token.NewToken(token.MULTIPLY, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					},
 				},
@@ -387,7 +387,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "a"}},
-						Operator: lexer.NewToken(lexer.MULTIPLY, nil),
+						Operator: token.NewToken(token.MULTIPLY, nil),
 						Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "b"}},
 					},
 				},
@@ -404,13 +404,13 @@ var analyzerTestCases = []struct {
 					Expression: ast.BinaryExpr{
 						Left: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
-						Operator: lexer.NewToken(lexer.MULTIPLY, nil),
+						Operator: token.NewToken(token.MULTIPLY, nil),
 						Right: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
 					},
@@ -427,7 +427,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "6"}},
-						Operator: lexer.NewToken(lexer.MULTIPLY, nil),
+						Operator: token.NewToken(token.MULTIPLY, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 6}},
 					},
 				},
@@ -444,7 +444,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
-						Operator: lexer.NewToken(lexer.INTEGER_DIV, nil),
+						Operator: token.NewToken(token.INTEGER_DIV, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					},
 				},
@@ -460,7 +460,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "a"}},
-						Operator: lexer.NewToken(lexer.INTEGER_DIV, nil),
+						Operator: token.NewToken(token.INTEGER_DIV, nil),
 						Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "b"}},
 					},
 				},
@@ -477,13 +477,13 @@ var analyzerTestCases = []struct {
 					Expression: ast.BinaryExpr{
 						Left: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
-						Operator: lexer.NewToken(lexer.INTEGER_DIV, nil),
+						Operator: token.NewToken(token.INTEGER_DIV, nil),
 						Right: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
 					},
@@ -500,7 +500,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "6"}},
-						Operator: lexer.NewToken(lexer.INTEGER_DIV, nil),
+						Operator: token.NewToken(token.INTEGER_DIV, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 6}},
 					},
 				},
@@ -517,7 +517,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
-						Operator: lexer.NewToken(lexer.AND, nil),
+						Operator: token.NewToken(token.AND, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					},
 				},
@@ -533,7 +533,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "a"}},
-						Operator: lexer.NewToken(lexer.AND, nil),
+						Operator: token.NewToken(token.AND, nil),
 						Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "b"}},
 					},
 				},
@@ -550,13 +550,13 @@ var analyzerTestCases = []struct {
 					Expression: ast.BinaryExpr{
 						Left: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
-						Operator: lexer.NewToken(lexer.AND, nil),
+						Operator: token.NewToken(token.AND, nil),
 						Right: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
 					},
@@ -573,7 +573,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "6"}},
-						Operator: lexer.NewToken(lexer.AND, nil),
+						Operator: token.NewToken(token.AND, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 6}},
 					},
 				},
@@ -590,7 +590,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
-						Operator: lexer.NewToken(lexer.LT, nil),
+						Operator: token.NewToken(token.LT, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					},
 				},
@@ -606,7 +606,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "a"}},
-						Operator: lexer.NewToken(lexer.LT, nil),
+						Operator: token.NewToken(token.LT, nil),
 						Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "b"}},
 					},
 				},
@@ -623,13 +623,13 @@ var analyzerTestCases = []struct {
 					Expression: ast.BinaryExpr{
 						Left: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
-						Operator: lexer.NewToken(lexer.LT, nil),
+						Operator: token.NewToken(token.LT, nil),
 						Right: ast.BinaryExpr{
 							Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 						},
 					},
@@ -646,7 +646,7 @@ var analyzerTestCases = []struct {
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.NullaryExpr{Operand: ast.StringOpnd{Value: "6"}},
-						Operator: lexer.NewToken(lexer.LT, nil),
+						Operator: token.NewToken(token.LT, nil),
 						Right:    ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 6}},
 					},
 				},
@@ -661,7 +661,7 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.ReadStmt{
-					TargetIdentifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "asd")},
+					TargetIdentifier: ast.Ident{Id: token.NewToken(token.IDENT, "asd")},
 				},
 			},
 		},
@@ -674,7 +674,7 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.ForStmt{
-					Index:      ast.Ident{Id: lexer.NewToken(lexer.IDENT, "foo")},
+					Index:      ast.Ident{Id: token.NewToken(token.IDENT, "foo")},
 					Low:        ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					High:       ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					Statements: ast.Stmts{},
@@ -689,11 +689,11 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
-					VariableType: lexer.NewToken(lexer.STRING, nil),
+					Identifier:   token.NewToken(token.IDENT, "i"),
+					VariableType: token.NewToken(token.STRING, nil),
 				},
 				ast.ForStmt{
-					Index:      ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+					Index:      ast.Ident{Id: token.NewToken(token.IDENT, "i")},
 					Low:        ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					High:       ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					Statements: ast.Stmts{},
@@ -708,11 +708,11 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
-					VariableType: lexer.NewToken(lexer.INTEGER, nil),
+					Identifier:   token.NewToken(token.IDENT, "i"),
+					VariableType: token.NewToken(token.INTEGER, nil),
 				},
 				ast.ForStmt{
-					Index:      ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+					Index:      ast.Ident{Id: token.NewToken(token.IDENT, "i")},
 					Low:        ast.NullaryExpr{Operand: ast.StringOpnd{Value: "1"}},
 					High:       ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					Statements: ast.Stmts{},
@@ -727,11 +727,11 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
-					VariableType: lexer.NewToken(lexer.INTEGER, nil),
+					Identifier:   token.NewToken(token.IDENT, "i"),
+					VariableType: token.NewToken(token.INTEGER, nil),
 				},
 				ast.ForStmt{
-					Index:      ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+					Index:      ast.Ident{Id: token.NewToken(token.IDENT, "i")},
 					Low:        ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					High:       ast.NullaryExpr{Operand: ast.StringOpnd{Value: "1"}},
 					Statements: ast.Stmts{},
@@ -746,17 +746,17 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
-					VariableType: lexer.NewToken(lexer.INTEGER, nil),
+					Identifier:   token.NewToken(token.IDENT, "i"),
+					VariableType: token.NewToken(token.INTEGER, nil),
 				},
 				ast.ForStmt{
-					Index: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+					Index: ast.Ident{Id: token.NewToken(token.IDENT, "i")},
 					Low:   ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 0}},
 					High:  ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 5}},
 					Statements: ast.Stmts{
 						Statements: []ast.Stmt{
 							ast.AssignStmt{
-								Identifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+								Identifier: ast.Ident{Id: token.NewToken(token.IDENT, "i")},
 								Expression: ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 15}},
 							},
 						},
@@ -772,17 +772,17 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
-					VariableType: lexer.NewToken(lexer.INTEGER, nil),
+					Identifier:   token.NewToken(token.IDENT, "i"),
+					VariableType: token.NewToken(token.INTEGER, nil),
 				},
 				ast.ForStmt{
-					Index:      ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+					Index:      ast.Ident{Id: token.NewToken(token.IDENT, "i")},
 					Low:        ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 0}},
 					High:       ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 5}},
 					Statements: ast.Stmts{},
 				},
 				ast.AssignStmt{
-					Identifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+					Identifier: ast.Ident{Id: token.NewToken(token.IDENT, "i")},
 					Expression: ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 15}},
 				},
 			},
@@ -795,11 +795,11 @@ var analyzerTestCases = []struct {
 		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
-					VariableType: lexer.NewToken(lexer.INTEGER, nil),
+					Identifier:   token.NewToken(token.IDENT, "i"),
+					VariableType: token.NewToken(token.INTEGER, nil),
 				},
 				ast.ForStmt{
-					Index:      ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+					Index:      ast.Ident{Id: token.NewToken(token.IDENT, "i")},
 					Low:        ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					High:       ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 20}},
 					Statements: ast.Stmts{},

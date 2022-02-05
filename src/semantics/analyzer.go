@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mjjs/minipl-go/src/ast"
-	"github.com/mjjs/minipl-go/src/lexer"
+	"github.com/mjjs/minipl-go/src/token"
 )
 
 type Analyzer struct {
@@ -52,11 +52,11 @@ func (i *Analyzer) VisitDeclStmt(node ast.DeclStmt) {
 	var variableType SymbolType
 
 	switch node.VariableType.Type() {
-	case lexer.INTEGER:
+	case token.INTEGER:
 		variableType = INTEGER
-	case lexer.STRING:
+	case token.STRING:
 		variableType = STRING
-	case lexer.BOOLEAN:
+	case token.BOOLEAN:
 		variableType = BOOLEAN
 	}
 
@@ -181,35 +181,35 @@ func (i *Analyzer) VisitBinaryExpr(node ast.BinaryExpr) {
 	}
 
 	switch node.Operator.Type() {
-	case lexer.PLUS:
+	case token.PLUS:
 		if leftType != INTEGER && leftType != STRING {
 			i.err = fmt.Errorf("Operator + not defined for type %s", leftType)
 			return
 		}
 		i.lastType = leftType
 
-	case lexer.MINUS:
+	case token.MINUS:
 		if leftType != INTEGER {
 			i.err = fmt.Errorf("Operator - not defined for type %s", leftType)
 			return
 		}
 		i.lastType = INTEGER
 
-	case lexer.MULTIPLY:
+	case token.MULTIPLY:
 		if leftType != INTEGER {
 			i.err = fmt.Errorf("Operator * not defined for type %s", leftType)
 			return
 		}
 		i.lastType = INTEGER
 
-	case lexer.INTEGER_DIV:
+	case token.INTEGER_DIV:
 		if leftType != INTEGER {
 			i.err = fmt.Errorf("Operator / not defined for type %s", leftType)
 			return
 		}
 		i.lastType = INTEGER
 
-	case lexer.AND:
+	case token.AND:
 		if leftType != BOOLEAN {
 			i.err = fmt.Errorf("Operator & not defined for type %s", leftType)
 			return
@@ -217,10 +217,10 @@ func (i *Analyzer) VisitBinaryExpr(node ast.BinaryExpr) {
 
 		i.lastType = BOOLEAN
 
-	case lexer.LT:
+	case token.LT:
 		i.lastType = BOOLEAN
 
-	case lexer.EQ:
+	case token.EQ:
 		i.lastType = BOOLEAN
 	}
 }
@@ -231,7 +231,7 @@ func (i *Analyzer) VisitUnaryExpr(node ast.UnaryExpr) {
 	}
 
 	node.Operand.Accept(i)
-	if node.Unary.Type() == lexer.NOT && i.lastType != BOOLEAN {
+	if node.Unary.Type() == token.NOT && i.lastType != BOOLEAN {
 		i.err = fmt.Errorf("Operator ! not defined for type %s", i.lastType)
 		return
 	}

@@ -1,37 +1,41 @@
 package lexer
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/mjjs/minipl-go/src/token"
+)
 
 var getNextTokenTestCases = []struct {
 	name           string
 	input          string
-	expectedTokens []Token
+	expectedTokens []token.Token
 	shouldPanic    bool
 }{
 	{
 		name:           "Empty input returns EOF token",
 		input:          "",
-		expectedTokens: []Token{{tag: EOF}},
+		expectedTokens: []token.Token{token.NewToken(token.EOF, nil)},
 	},
 	{
 		name:           "Integer",
 		input:          "int",
-		expectedTokens: []Token{{tag: INTEGER}},
+		expectedTokens: []token.Token{token.NewToken(token.INTEGER, nil)},
 	},
 	{
 		name:           "String type",
 		input:          "string",
-		expectedTokens: []Token{{tag: STRING}},
+		expectedTokens: []token.Token{token.NewToken(token.STRING, nil)},
 	},
 	{
 		name:           "Boolean type",
 		input:          "bool",
-		expectedTokens: []Token{{tag: BOOLEAN}},
+		expectedTokens: []token.Token{token.NewToken(token.BOOLEAN, nil)},
 	},
 	{
 		name:           "Integer literal",
 		input:          "666",
-		expectedTokens: []Token{{tag: INTEGER_LITERAL, lexeme: 666}},
+		expectedTokens: []token.Token{token.NewToken(token.INTEGER_LITERAL, 666)},
 	},
 	{
 		name:        "Integer starting with zero",
@@ -41,7 +45,7 @@ var getNextTokenTestCases = []struct {
 	{
 		name:           "String literal",
 		input:          "\"C-beams\"",
-		expectedTokens: []Token{{tag: STRING_LITERAL, lexeme: "C-beams"}},
+		expectedTokens: []token.Token{token.NewToken(token.STRING_LITERAL, "C-beams")},
 	},
 	{
 		name:        "Unterminated string literal 1",
@@ -56,22 +60,22 @@ var getNextTokenTestCases = []struct {
 	{
 		name:  "String literal with escaped characters",
 		input: `"abc\\ def \""`,
-		expectedTokens: []Token{
-			{tag: STRING_LITERAL, lexeme: "abc\\ def \""},
+		expectedTokens: []token.Token{
+			token.NewToken(token.STRING_LITERAL, "abc\\ def \""),
 		},
 	},
 	{
 		name:  "String literal with newlines",
 		input: `"a\nb\r"`,
-		expectedTokens: []Token{
-			{tag: STRING_LITERAL, lexeme: "a\nb\r"},
+		expectedTokens: []token.Token{
+			token.NewToken(token.STRING_LITERAL, "a\nb\r"),
 		},
 	},
 	{
 		name:  "String literal with tab character",
 		input: `"a:\tb"`,
-		expectedTokens: []Token{
-			{tag: STRING_LITERAL, lexeme: "a:\tb"},
+		expectedTokens: []token.Token{
+			token.NewToken(token.STRING_LITERAL, "a:\tb"),
 		},
 	},
 	{
@@ -80,226 +84,228 @@ var getNextTokenTestCases = []struct {
 		shouldPanic: true,
 	},
 	{
-		name:           "Single ID",
-		input:          "myOwnVar",
-		expectedTokens: []Token{{tag: IDENT, lexeme: "myOwnVar"}},
+		name:  "Single ID",
+		input: "myOwnVar",
+		expectedTokens: []token.Token{
+			token.NewToken(token.IDENT, "myOwnVar"),
+		},
 	},
 	{
 		name:           "Plus operator",
 		input:          "+",
-		expectedTokens: []Token{{tag: PLUS}},
+		expectedTokens: []token.Token{token.NewToken(token.PLUS, nil)},
 	},
 	{
 		name:           "Minus operator",
 		input:          "-",
-		expectedTokens: []Token{{tag: MINUS}},
+		expectedTokens: []token.Token{token.NewToken(token.MINUS, nil)},
 	},
 	{
 		name:           "Multiply operator",
 		input:          "*",
-		expectedTokens: []Token{{tag: MULTIPLY}},
+		expectedTokens: []token.Token{token.NewToken(token.MULTIPLY, nil)},
 	},
 	{
 		name:           "Integer division operator",
 		input:          "/",
-		expectedTokens: []Token{{tag: INTEGER_DIV}},
+		expectedTokens: []token.Token{token.NewToken(token.INTEGER_DIV, nil)},
 	},
 	{
 		name:           "Less than operator",
 		input:          "<",
-		expectedTokens: []Token{{tag: LT}},
+		expectedTokens: []token.Token{token.NewToken(token.LT, nil)},
 	},
 	{
 		name:           "Equality operator",
 		input:          "=",
-		expectedTokens: []Token{{tag: EQ}},
+		expectedTokens: []token.Token{token.NewToken(token.EQ, nil)},
 	},
 	{
 		name:           "Logical and operator",
 		input:          "&",
-		expectedTokens: []Token{{tag: AND}},
+		expectedTokens: []token.Token{token.NewToken(token.AND, nil)},
 	},
 	{
 		name:           "Logical not operator",
 		input:          "!",
-		expectedTokens: []Token{{tag: NOT}},
+		expectedTokens: []token.Token{token.NewToken(token.NOT, nil)},
 	},
 	{
 		name:           "Assign operator",
 		input:          ":=",
-		expectedTokens: []Token{{tag: ASSIGN}},
+		expectedTokens: []token.Token{token.NewToken(token.ASSIGN, nil)},
 	},
 	{
 		name:           "Left parenthesis",
 		input:          "(",
-		expectedTokens: []Token{{tag: LPAREN}},
+		expectedTokens: []token.Token{token.NewToken(token.LPAREN, nil)},
 	},
 	{
 		name:           "Right parenthesis",
 		input:          ")",
-		expectedTokens: []Token{{tag: RPAREN}},
+		expectedTokens: []token.Token{token.NewToken(token.RPAREN, nil)},
 	},
 	{
 		name:           "Semicolon",
 		input:          ";",
-		expectedTokens: []Token{{tag: SEMI}},
+		expectedTokens: []token.Token{token.NewToken(token.SEMI, nil)},
 	},
 	{
 		name:           "Colon",
 		input:          ":",
-		expectedTokens: []Token{{tag: COLON}},
+		expectedTokens: []token.Token{token.NewToken(token.COLON, nil)},
 	},
 	{
 		name:           "For keyword",
 		input:          "for",
-		expectedTokens: []Token{{tag: FOR}},
+		expectedTokens: []token.Token{token.NewToken(token.FOR, nil)},
 	},
 	{
 		name:           "In keyword",
 		input:          "in",
-		expectedTokens: []Token{{tag: IN}},
+		expectedTokens: []token.Token{token.NewToken(token.IN, nil)},
 	},
 	{
 		name:           "Do keyword",
 		input:          "do",
-		expectedTokens: []Token{{tag: DO}},
+		expectedTokens: []token.Token{token.NewToken(token.DO, nil)},
 	},
 	{
 		name:           "End keyword",
 		input:          "end",
-		expectedTokens: []Token{{tag: END}},
+		expectedTokens: []token.Token{token.NewToken(token.END, nil)},
 	},
 	{
 		name:           "Double dot keyword",
 		input:          "..",
-		expectedTokens: []Token{{tag: DOTDOT}},
+		expectedTokens: []token.Token{token.NewToken(token.DOTDOT, nil)},
 	},
 	{
 		name:           "Assert keyword",
 		input:          "assert",
-		expectedTokens: []Token{{tag: ASSERT}},
+		expectedTokens: []token.Token{token.NewToken(token.ASSERT, nil)},
 	},
 	{
 		name:           "Var keyword",
 		input:          "var",
-		expectedTokens: []Token{{tag: VAR}},
+		expectedTokens: []token.Token{token.NewToken(token.VAR, nil)},
 	},
 	{
 		name:           "Read keyword",
 		input:          "read",
-		expectedTokens: []Token{{tag: READ}},
+		expectedTokens: []token.Token{token.NewToken(token.READ, nil)},
 	},
 	{
 		name:           "Print keyword",
 		input:          "print",
-		expectedTokens: []Token{{tag: PRINT}},
+		expectedTokens: []token.Token{token.NewToken(token.PRINT, nil)},
 	},
 	{
 		name:  "Whitespace is skipped",
 		input: "first   \n    second",
-		expectedTokens: []Token{
-			{tag: IDENT, lexeme: "first"},
-			{tag: IDENT, lexeme: "second"},
+		expectedTokens: []token.Token{
+			token.NewToken(token.IDENT, "first"),
+			token.NewToken(token.IDENT, "second"),
 		},
 	},
 	{
 		name:  "For loop",
 		input: "for i in 1..n do\n\tv := v * i;\nend for;",
-		expectedTokens: []Token{
-			{tag: FOR},
-			{tag: IDENT, lexeme: "i"},
-			{tag: IN},
-			{tag: INTEGER_LITERAL, lexeme: 1},
-			{tag: DOTDOT},
-			{tag: IDENT, lexeme: "n"},
-			{tag: DO},
-			{tag: IDENT, lexeme: "v"},
-			{tag: ASSIGN},
-			{tag: IDENT, lexeme: "v"},
-			{tag: MULTIPLY},
-			{tag: IDENT, lexeme: "i"},
-			{tag: SEMI},
-			{tag: END},
-			{tag: FOR},
-			{tag: SEMI},
+		expectedTokens: []token.Token{
+			token.NewToken(token.FOR, nil),
+			token.NewToken(token.IDENT, "i"),
+			token.NewToken(token.IN, nil),
+			token.NewToken(token.INTEGER_LITERAL, 1),
+			token.NewToken(token.DOTDOT, nil),
+			token.NewToken(token.IDENT, "n"),
+			token.NewToken(token.DO, nil),
+			token.NewToken(token.IDENT, "v"),
+			token.NewToken(token.ASSIGN, nil),
+			token.NewToken(token.IDENT, "v"),
+			token.NewToken(token.MULTIPLY, nil),
+			token.NewToken(token.IDENT, "i"),
+			token.NewToken(token.SEMI, nil),
+			token.NewToken(token.END, nil),
+			token.NewToken(token.FOR, nil),
+			token.NewToken(token.SEMI, nil),
 		},
 	},
 	{
 		name:  "Parentheses tokenize correctly",
 		input: "(52)",
-		expectedTokens: []Token{
-			{tag: LPAREN},
-			{tag: INTEGER_LITERAL, lexeme: 52},
-			{tag: RPAREN},
+		expectedTokens: []token.Token{
+			token.NewToken(token.LPAREN, nil),
+			token.NewToken(token.INTEGER_LITERAL, 52),
+			token.NewToken(token.RPAREN, nil),
 		},
 	},
 	{
 		name:  "Declaration with assignment",
 		input: "var x : int := 4;",
-		expectedTokens: []Token{
-			{tag: VAR},
-			{tag: IDENT, lexeme: "x"},
-			{tag: COLON},
-			{tag: INTEGER},
-			{tag: ASSIGN},
-			{tag: INTEGER_LITERAL, lexeme: 4},
-			{tag: SEMI},
+		expectedTokens: []token.Token{
+			token.NewToken(token.VAR, nil),
+			token.NewToken(token.IDENT, "x"),
+			token.NewToken(token.COLON, nil),
+			token.NewToken(token.INTEGER, nil),
+			token.NewToken(token.ASSIGN, nil),
+			token.NewToken(token.INTEGER_LITERAL, 4),
+			token.NewToken(token.SEMI, nil),
 		},
 	},
 	{
 		name:  "Declaration and assignment in different lines",
 		input: "var firstLine : string;\nfirstLine := \"secondLine\";",
-		expectedTokens: []Token{
-			{tag: VAR},
-			{tag: IDENT, lexeme: "firstLine"},
-			{tag: COLON},
-			{tag: STRING},
-			{tag: SEMI},
-			{tag: IDENT, lexeme: "firstLine"},
-			{tag: ASSIGN},
-			{tag: STRING_LITERAL, lexeme: "secondLine"},
-			{tag: SEMI},
+		expectedTokens: []token.Token{
+			token.NewToken(token.VAR, nil),
+			token.NewToken(token.IDENT, "firstLine"),
+			token.NewToken(token.COLON, nil),
+			token.NewToken(token.STRING, nil),
+			token.NewToken(token.SEMI, nil),
+			token.NewToken(token.IDENT, "firstLine"),
+			token.NewToken(token.ASSIGN, nil),
+			token.NewToken(token.STRING_LITERAL, "secondLine"),
+			token.NewToken(token.SEMI, nil),
 		},
 	},
 	{
 		name:  "Assert with weird formatting",
 		input: "            assert    (x     =         somethingElse)   ;",
-		expectedTokens: []Token{
-			{tag: ASSERT},
-			{tag: LPAREN},
-			{tag: IDENT, lexeme: "x"},
-			{tag: EQ},
-			{tag: IDENT, lexeme: "somethingElse"},
-			{tag: RPAREN},
-			{tag: SEMI},
+		expectedTokens: []token.Token{
+			token.NewToken(token.ASSERT, nil),
+			token.NewToken(token.LPAREN, nil),
+			token.NewToken(token.IDENT, "x"),
+			token.NewToken(token.EQ, nil),
+			token.NewToken(token.IDENT, "somethingElse"),
+			token.NewToken(token.RPAREN, nil),
+			token.NewToken(token.SEMI, nil),
 		},
 	},
 	{
 		name:  "Skips line comments",
 		input: "3 + 3; // this is a comment\n4 + 4;",
-		expectedTokens: []Token{
-			{tag: INTEGER_LITERAL, lexeme: 3},
-			{tag: PLUS},
-			{tag: INTEGER_LITERAL, lexeme: 3},
-			{tag: SEMI},
-			{tag: INTEGER_LITERAL, lexeme: 4},
-			{tag: PLUS},
-			{tag: INTEGER_LITERAL, lexeme: 4},
-			{tag: SEMI},
+		expectedTokens: []token.Token{
+			token.NewToken(token.INTEGER_LITERAL, 3),
+			token.NewToken(token.PLUS, nil),
+			token.NewToken(token.INTEGER_LITERAL, 3),
+			token.NewToken(token.SEMI, nil),
+			token.NewToken(token.INTEGER_LITERAL, 4),
+			token.NewToken(token.PLUS, nil),
+			token.NewToken(token.INTEGER_LITERAL, 4),
+			token.NewToken(token.SEMI, nil),
 		},
 	},
 	{
 		name:  "Skips block comments",
 		input: "1 + 2; /*This is a comment*/ 3 + 4;",
-		expectedTokens: []Token{
-			{tag: INTEGER_LITERAL, lexeme: 1},
-			{tag: PLUS},
-			{tag: INTEGER_LITERAL, lexeme: 2},
-			{tag: SEMI},
-			{tag: INTEGER_LITERAL, lexeme: 3},
-			{tag: PLUS},
-			{tag: INTEGER_LITERAL, lexeme: 4},
-			{tag: SEMI},
+		expectedTokens: []token.Token{
+			token.NewToken(token.INTEGER_LITERAL, 1),
+			token.NewToken(token.PLUS, nil),
+			token.NewToken(token.INTEGER_LITERAL, 2),
+			token.NewToken(token.SEMI, nil),
+			token.NewToken(token.INTEGER_LITERAL, 3),
+			token.NewToken(token.PLUS, nil),
+			token.NewToken(token.INTEGER_LITERAL, 4),
+			token.NewToken(token.SEMI, nil),
 		},
 	},
 }
@@ -319,11 +325,11 @@ func TestGetNextToken(t *testing.T) {
 				lexer.GetNextToken()
 			}
 
-			for _, token := range testCase.expectedTokens {
+			for _, expectedToken := range testCase.expectedTokens {
 				actual := lexer.GetNextToken()
 
-				if actual != token {
-					t.Errorf("Expected %v, got %v", token, actual)
+				if actual != expectedToken {
+					t.Errorf("Expected %v, got %v", expectedToken, actual)
 				}
 			}
 		})

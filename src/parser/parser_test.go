@@ -5,31 +5,31 @@ import (
 	"testing"
 
 	"github.com/mjjs/minipl-go/src/ast"
-	"github.com/mjjs/minipl-go/src/lexer"
+	"github.com/mjjs/minipl-go/src/token"
 )
 
 var parseTestCases = []struct {
 	name           string
-	lexerOutput    []lexer.Token
+	lexerOutput    []token.Token
 	expectedOutput ast.Prog
 	shouldError    bool
 }{
 	{
 		name: "Declaration with assignment",
-		lexerOutput: []lexer.Token{
-			lexer.NewToken(lexer.VAR, nil),
-			lexer.NewToken(lexer.IDENT, "x"),
-			lexer.NewToken(lexer.COLON, nil),
-			lexer.NewToken(lexer.INTEGER, nil),
-			lexer.NewToken(lexer.ASSIGN, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 5),
-			lexer.NewToken(lexer.SEMI, nil),
+		lexerOutput: []token.Token{
+			token.NewToken(token.VAR, nil),
+			token.NewToken(token.IDENT, "x"),
+			token.NewToken(token.COLON, nil),
+			token.NewToken(token.INTEGER, nil),
+			token.NewToken(token.ASSIGN, nil),
+			token.NewToken(token.INTEGER_LITERAL, 5),
+			token.NewToken(token.SEMI, nil),
 		},
 		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "x"),
-					VariableType: lexer.NewToken(lexer.INTEGER, nil),
+					Identifier:   token.NewToken(token.IDENT, "x"),
+					VariableType: token.NewToken(token.INTEGER, nil),
 					Expression: ast.NullaryExpr{
 						Operand: ast.NumberOpnd{Value: 5},
 					},
@@ -40,41 +40,41 @@ var parseTestCases = []struct {
 	},
 	{
 		name: "Declaration without assignment",
-		lexerOutput: []lexer.Token{
+		lexerOutput: []token.Token{
 			// Int
-			lexer.NewToken(lexer.VAR, nil),
-			lexer.NewToken(lexer.IDENT, "x"),
-			lexer.NewToken(lexer.COLON, nil),
-			lexer.NewToken(lexer.INTEGER, nil),
-			lexer.NewToken(lexer.SEMI, nil),
+			token.NewToken(token.VAR, nil),
+			token.NewToken(token.IDENT, "x"),
+			token.NewToken(token.COLON, nil),
+			token.NewToken(token.INTEGER, nil),
+			token.NewToken(token.SEMI, nil),
 
 			// String
-			lexer.NewToken(lexer.VAR, nil),
-			lexer.NewToken(lexer.IDENT, "y"),
-			lexer.NewToken(lexer.COLON, nil),
-			lexer.NewToken(lexer.STRING, nil),
-			lexer.NewToken(lexer.SEMI, nil),
+			token.NewToken(token.VAR, nil),
+			token.NewToken(token.IDENT, "y"),
+			token.NewToken(token.COLON, nil),
+			token.NewToken(token.STRING, nil),
+			token.NewToken(token.SEMI, nil),
 
 			// Boolean
-			lexer.NewToken(lexer.VAR, nil),
-			lexer.NewToken(lexer.IDENT, "z"),
-			lexer.NewToken(lexer.COLON, nil),
-			lexer.NewToken(lexer.BOOLEAN, nil),
-			lexer.NewToken(lexer.SEMI, nil),
+			token.NewToken(token.VAR, nil),
+			token.NewToken(token.IDENT, "z"),
+			token.NewToken(token.COLON, nil),
+			token.NewToken(token.BOOLEAN, nil),
+			token.NewToken(token.SEMI, nil),
 		},
 		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "x"),
-					VariableType: lexer.NewToken(lexer.INTEGER, nil),
+					Identifier:   token.NewToken(token.IDENT, "x"),
+					VariableType: token.NewToken(token.INTEGER, nil),
 				},
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "y"),
-					VariableType: lexer.NewToken(lexer.STRING, nil),
+					Identifier:   token.NewToken(token.IDENT, "y"),
+					VariableType: token.NewToken(token.STRING, nil),
 				},
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "z"),
-					VariableType: lexer.NewToken(lexer.BOOLEAN, nil),
+					Identifier:   token.NewToken(token.IDENT, "z"),
+					VariableType: token.NewToken(token.BOOLEAN, nil),
 				},
 			},
 		},
@@ -82,16 +82,16 @@ var parseTestCases = []struct {
 	},
 	{
 		name: "Assignment",
-		lexerOutput: []lexer.Token{
-			lexer.NewToken(lexer.IDENT, "foo"),
-			lexer.NewToken(lexer.ASSIGN, nil),
-			lexer.NewToken(lexer.STRING_LITERAL, "bar"),
-			lexer.NewToken(lexer.SEMI, nil),
+		lexerOutput: []token.Token{
+			token.NewToken(token.IDENT, "foo"),
+			token.NewToken(token.ASSIGN, nil),
+			token.NewToken(token.STRING_LITERAL, "bar"),
+			token.NewToken(token.SEMI, nil),
 		},
 		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.AssignStmt{
-					Identifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "foo")},
+					Identifier: ast.Ident{Id: token.NewToken(token.IDENT, "foo")},
 					Expression: ast.NullaryExpr{
 						Operand: ast.StringOpnd{Value: "bar"},
 					},
@@ -102,48 +102,48 @@ var parseTestCases = []struct {
 	},
 	{
 		name: "For statement with multiple inner statements",
-		lexerOutput: []lexer.Token{
-			lexer.NewToken(lexer.FOR, nil),
-			lexer.NewToken(lexer.IDENT, "i"),
-			lexer.NewToken(lexer.IN, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 3),
-			lexer.NewToken(lexer.PLUS, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 2),
-			lexer.NewToken(lexer.DOTDOT, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 25),
-			lexer.NewToken(lexer.MINUS, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 1),
-			lexer.NewToken(lexer.DO, nil),
-			lexer.NewToken(lexer.READ, nil),
-			lexer.NewToken(lexer.IDENT, "x"),
-			lexer.NewToken(lexer.SEMI, nil),
-			lexer.NewToken(lexer.PRINT, nil),
-			lexer.NewToken(lexer.IDENT, "x"),
-			lexer.NewToken(lexer.SEMI, nil),
-			lexer.NewToken(lexer.END, nil),
-			lexer.NewToken(lexer.FOR, nil),
-			lexer.NewToken(lexer.SEMI, nil),
+		lexerOutput: []token.Token{
+			token.NewToken(token.FOR, nil),
+			token.NewToken(token.IDENT, "i"),
+			token.NewToken(token.IN, nil),
+			token.NewToken(token.INTEGER_LITERAL, 3),
+			token.NewToken(token.PLUS, nil),
+			token.NewToken(token.INTEGER_LITERAL, 2),
+			token.NewToken(token.DOTDOT, nil),
+			token.NewToken(token.INTEGER_LITERAL, 25),
+			token.NewToken(token.MINUS, nil),
+			token.NewToken(token.INTEGER_LITERAL, 1),
+			token.NewToken(token.DO, nil),
+			token.NewToken(token.READ, nil),
+			token.NewToken(token.IDENT, "x"),
+			token.NewToken(token.SEMI, nil),
+			token.NewToken(token.PRINT, nil),
+			token.NewToken(token.IDENT, "x"),
+			token.NewToken(token.SEMI, nil),
+			token.NewToken(token.END, nil),
+			token.NewToken(token.FOR, nil),
+			token.NewToken(token.SEMI, nil),
 		},
 		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.ForStmt{
-					Index: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
+					Index: ast.Ident{Id: token.NewToken(token.IDENT, "i")},
 					Low: ast.BinaryExpr{
 						Left:     ast.NumberOpnd{Value: 3},
-						Operator: lexer.NewToken(lexer.PLUS, nil),
+						Operator: token.NewToken(token.PLUS, nil),
 						Right:    ast.NumberOpnd{Value: 2},
 					},
 					High: ast.BinaryExpr{
 						Left:     ast.NumberOpnd{Value: 25},
-						Operator: lexer.NewToken(lexer.MINUS, nil),
+						Operator: token.NewToken(token.MINUS, nil),
 						Right:    ast.NumberOpnd{Value: 1},
 					},
 					Statements: ast.Stmts{
 						Statements: []ast.Stmt{
-							ast.ReadStmt{TargetIdentifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "x")}},
+							ast.ReadStmt{TargetIdentifier: ast.Ident{Id: token.NewToken(token.IDENT, "x")}},
 							ast.PrintStmt{
 								Expression: ast.NullaryExpr{
-									Operand: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "x")},
+									Operand: ast.Ident{Id: token.NewToken(token.IDENT, "x")},
 								},
 							},
 						},
@@ -155,21 +155,21 @@ var parseTestCases = []struct {
 	},
 	{
 		name: "Assert statement",
-		lexerOutput: []lexer.Token{
-			lexer.NewToken(lexer.ASSERT, nil),
-			lexer.NewToken(lexer.LPAREN, nil),
-			lexer.NewToken(lexer.STRING_LITERAL, "foo"),
-			lexer.NewToken(lexer.EQ, nil),
-			lexer.NewToken(lexer.STRING_LITERAL, "bar"),
-			lexer.NewToken(lexer.RPAREN, nil),
-			lexer.NewToken(lexer.SEMI, nil),
+		lexerOutput: []token.Token{
+			token.NewToken(token.ASSERT, nil),
+			token.NewToken(token.LPAREN, nil),
+			token.NewToken(token.STRING_LITERAL, "foo"),
+			token.NewToken(token.EQ, nil),
+			token.NewToken(token.STRING_LITERAL, "bar"),
+			token.NewToken(token.RPAREN, nil),
+			token.NewToken(token.SEMI, nil),
 		},
 		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.AssertStmt{
 					Expression: ast.BinaryExpr{
 						Left:     ast.StringOpnd{Value: "foo"},
-						Operator: lexer.NewToken(lexer.EQ, nil),
+						Operator: token.NewToken(token.EQ, nil),
 						Right:    ast.StringOpnd{Value: "bar"},
 					},
 				},
@@ -179,35 +179,35 @@ var parseTestCases = []struct {
 	},
 	{
 		name: "Error if no EOF is returned by lexer when expected",
-		lexerOutput: []lexer.Token{
-			lexer.NewToken(lexer.PRINT, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 22),
-			lexer.NewToken(lexer.SEMI, nil),
-			lexer.NewToken(lexer.SEMI, nil),
+		lexerOutput: []token.Token{
+			token.NewToken(token.PRINT, nil),
+			token.NewToken(token.INTEGER_LITERAL, 22),
+			token.NewToken(token.SEMI, nil),
+			token.NewToken(token.SEMI, nil),
 		},
 		shouldError: true,
 	},
 	{
 		name: "Parenthesised expressions",
-		lexerOutput: []lexer.Token{
+		lexerOutput: []token.Token{
 			// print (1 * 2) / (4 - 3)
-			lexer.NewToken(lexer.PRINT, nil),
+			token.NewToken(token.PRINT, nil),
 
-			lexer.NewToken(lexer.LPAREN, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 1),
-			lexer.NewToken(lexer.MULTIPLY, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 2),
-			lexer.NewToken(lexer.RPAREN, nil),
+			token.NewToken(token.LPAREN, nil),
+			token.NewToken(token.INTEGER_LITERAL, 1),
+			token.NewToken(token.MULTIPLY, nil),
+			token.NewToken(token.INTEGER_LITERAL, 2),
+			token.NewToken(token.RPAREN, nil),
 
-			lexer.NewToken(lexer.INTEGER_DIV, nil),
+			token.NewToken(token.INTEGER_DIV, nil),
 
-			lexer.NewToken(lexer.LPAREN, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 4),
-			lexer.NewToken(lexer.MINUS, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 3),
-			lexer.NewToken(lexer.RPAREN, nil),
+			token.NewToken(token.LPAREN, nil),
+			token.NewToken(token.INTEGER_LITERAL, 4),
+			token.NewToken(token.MINUS, nil),
+			token.NewToken(token.INTEGER_LITERAL, 3),
+			token.NewToken(token.RPAREN, nil),
 
-			lexer.NewToken(lexer.SEMI, nil),
+			token.NewToken(token.SEMI, nil),
 		},
 		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
@@ -215,13 +215,13 @@ var parseTestCases = []struct {
 					Expression: ast.BinaryExpr{
 						Left: ast.BinaryExpr{
 							Left:     ast.NumberOpnd{Value: 1},
-							Operator: lexer.NewToken(lexer.MULTIPLY, nil),
+							Operator: token.NewToken(token.MULTIPLY, nil),
 							Right:    ast.NumberOpnd{Value: 2},
 						},
-						Operator: lexer.NewToken(lexer.INTEGER_DIV, nil),
+						Operator: token.NewToken(token.INTEGER_DIV, nil),
 						Right: ast.BinaryExpr{
 							Left:     ast.NumberOpnd{Value: 4},
-							Operator: lexer.NewToken(lexer.MINUS, nil),
+							Operator: token.NewToken(token.MINUS, nil),
 							Right:    ast.NumberOpnd{Value: 3},
 						},
 					},
@@ -232,26 +232,26 @@ var parseTestCases = []struct {
 	},
 	{
 		name: "Less than comparison",
-		lexerOutput: []lexer.Token{
+		lexerOutput: []token.Token{
 			// var foo : bool := 3 < 2
-			lexer.NewToken(lexer.VAR, nil),
-			lexer.NewToken(lexer.IDENT, "foo"),
-			lexer.NewToken(lexer.COLON, nil),
-			lexer.NewToken(lexer.BOOLEAN, nil),
-			lexer.NewToken(lexer.ASSIGN, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 3),
-			lexer.NewToken(lexer.LT, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 2),
-			lexer.NewToken(lexer.SEMI, nil),
+			token.NewToken(token.VAR, nil),
+			token.NewToken(token.IDENT, "foo"),
+			token.NewToken(token.COLON, nil),
+			token.NewToken(token.BOOLEAN, nil),
+			token.NewToken(token.ASSIGN, nil),
+			token.NewToken(token.INTEGER_LITERAL, 3),
+			token.NewToken(token.LT, nil),
+			token.NewToken(token.INTEGER_LITERAL, 2),
+			token.NewToken(token.SEMI, nil),
 		},
 		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
-					VariableType: lexer.NewToken(lexer.BOOLEAN, nil),
+					Identifier:   token.NewToken(token.IDENT, "foo"),
+					VariableType: token.NewToken(token.BOOLEAN, nil),
 					Expression: ast.BinaryExpr{
 						Left:     ast.NumberOpnd{Value: 3},
-						Operator: lexer.NewToken(lexer.LT, nil),
+						Operator: token.NewToken(token.LT, nil),
 						Right:    ast.NumberOpnd{Value: 2},
 					},
 				},
@@ -261,65 +261,65 @@ var parseTestCases = []struct {
 	},
 	{
 		name: "Nested logical and operator with not",
-		lexerOutput: []lexer.Token{
+		lexerOutput: []token.Token{
 			// var foo : bool := ((3 = 3) & (2 = 2)) & (1 = 0);
-			lexer.NewToken(lexer.VAR, nil),
-			lexer.NewToken(lexer.IDENT, "foo"),
-			lexer.NewToken(lexer.COLON, nil),
-			lexer.NewToken(lexer.BOOLEAN, nil),
-			lexer.NewToken(lexer.ASSIGN, nil),
+			token.NewToken(token.VAR, nil),
+			token.NewToken(token.IDENT, "foo"),
+			token.NewToken(token.COLON, nil),
+			token.NewToken(token.BOOLEAN, nil),
+			token.NewToken(token.ASSIGN, nil),
 
-			lexer.NewToken(lexer.LPAREN, nil),
+			token.NewToken(token.LPAREN, nil),
 
-			lexer.NewToken(lexer.LPAREN, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 3),
-			lexer.NewToken(lexer.EQ, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 3),
-			lexer.NewToken(lexer.RPAREN, nil),
+			token.NewToken(token.LPAREN, nil),
+			token.NewToken(token.INTEGER_LITERAL, 3),
+			token.NewToken(token.EQ, nil),
+			token.NewToken(token.INTEGER_LITERAL, 3),
+			token.NewToken(token.RPAREN, nil),
 
-			lexer.NewToken(lexer.AND, nil),
+			token.NewToken(token.AND, nil),
 
-			lexer.NewToken(lexer.LPAREN, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 2),
-			lexer.NewToken(lexer.EQ, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 2),
-			lexer.NewToken(lexer.RPAREN, nil),
+			token.NewToken(token.LPAREN, nil),
+			token.NewToken(token.INTEGER_LITERAL, 2),
+			token.NewToken(token.EQ, nil),
+			token.NewToken(token.INTEGER_LITERAL, 2),
+			token.NewToken(token.RPAREN, nil),
 
-			lexer.NewToken(lexer.RPAREN, nil),
+			token.NewToken(token.RPAREN, nil),
 
-			lexer.NewToken(lexer.AND, nil),
+			token.NewToken(token.AND, nil),
 
-			lexer.NewToken(lexer.LPAREN, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 1),
-			lexer.NewToken(lexer.EQ, nil),
-			lexer.NewToken(lexer.INTEGER_LITERAL, 0),
-			lexer.NewToken(lexer.RPAREN, nil),
+			token.NewToken(token.LPAREN, nil),
+			token.NewToken(token.INTEGER_LITERAL, 1),
+			token.NewToken(token.EQ, nil),
+			token.NewToken(token.INTEGER_LITERAL, 0),
+			token.NewToken(token.RPAREN, nil),
 
-			lexer.NewToken(lexer.SEMI, nil),
+			token.NewToken(token.SEMI, nil),
 		},
 		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
-					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
-					VariableType: lexer.NewToken(lexer.BOOLEAN, nil),
+					Identifier:   token.NewToken(token.IDENT, "foo"),
+					VariableType: token.NewToken(token.BOOLEAN, nil),
 					Expression: ast.BinaryExpr{
 						Left: ast.BinaryExpr{
 							Left: ast.BinaryExpr{
 								Left:     ast.NumberOpnd{Value: 3},
-								Operator: lexer.NewToken(lexer.EQ, nil),
+								Operator: token.NewToken(token.EQ, nil),
 								Right:    ast.NumberOpnd{Value: 3},
 							},
-							Operator: lexer.NewToken(lexer.AND, nil),
+							Operator: token.NewToken(token.AND, nil),
 							Right: ast.BinaryExpr{
 								Left:     ast.NumberOpnd{Value: 2},
-								Operator: lexer.NewToken(lexer.EQ, nil),
+								Operator: token.NewToken(token.EQ, nil),
 								Right:    ast.NumberOpnd{Value: 2},
 							},
 						},
-						Operator: lexer.NewToken(lexer.AND, nil),
+						Operator: token.NewToken(token.AND, nil),
 						Right: ast.BinaryExpr{
 							Left:     ast.NumberOpnd{Value: 1},
-							Operator: lexer.NewToken(lexer.EQ, nil),
+							Operator: token.NewToken(token.EQ, nil),
 							Right:    ast.NumberOpnd{Value: 0},
 						},
 					},
@@ -330,22 +330,22 @@ var parseTestCases = []struct {
 	},
 	{
 		name: "Logical not",
-		lexerOutput: []lexer.Token{
+		lexerOutput: []token.Token{
 			// print !(notTrue);
-			lexer.NewToken(lexer.PRINT, nil),
-			lexer.NewToken(lexer.NOT, nil),
-			lexer.NewToken(lexer.LPAREN, nil),
-			lexer.NewToken(lexer.IDENT, "notTrue"),
-			lexer.NewToken(lexer.RPAREN, nil),
-			lexer.NewToken(lexer.SEMI, nil),
+			token.NewToken(token.PRINT, nil),
+			token.NewToken(token.NOT, nil),
+			token.NewToken(token.LPAREN, nil),
+			token.NewToken(token.IDENT, "notTrue"),
+			token.NewToken(token.RPAREN, nil),
+			token.NewToken(token.SEMI, nil),
 		},
 		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.UnaryExpr{
-						Unary: lexer.NewToken(lexer.NOT, nil),
+						Unary: token.NewToken(token.NOT, nil),
 						Operand: ast.NullaryExpr{
-							Operand: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "notTrue")},
+							Operand: ast.Ident{Id: token.NewToken(token.IDENT, "notTrue")},
 						},
 					},
 				},
@@ -377,17 +377,17 @@ func TestParse(t *testing.T) {
 }
 
 type mockLexer struct {
-	tokens []lexer.Token
+	tokens []token.Token
 	pos    int
 }
 
-func newMockLexer(tokens ...lexer.Token) *mockLexer {
+func newMockLexer(tokens ...token.Token) *mockLexer {
 	return &mockLexer{tokens: tokens}
 }
 
-func (m *mockLexer) GetNextToken() lexer.Token {
+func (m *mockLexer) GetNextToken() token.Token {
 	if m.pos > len(m.tokens)-1 {
-		return lexer.NewToken(lexer.EOF, nil)
+		return token.NewToken(token.EOF, nil)
 	}
 
 	token := m.tokens[m.pos]

@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/mjjs/minipl-go/src/ast"
-	"github.com/mjjs/minipl-go/src/lexer"
 	"github.com/mjjs/minipl-go/src/stack"
+	"github.com/mjjs/minipl-go/src/token"
 )
 
 type Interpreter struct {
@@ -54,9 +54,9 @@ func (i *Interpreter) VisitDeclStmt(node ast.DeclStmt) {
 		value = i.stack.Pop()
 	} else {
 		typ := node.VariableType.Type()
-		if typ == lexer.INTEGER {
+		if typ == token.INTEGER {
 			value = 0
-		} else if typ == lexer.STRING {
+		} else if typ == token.STRING {
 			value = ""
 		} else {
 			value = false
@@ -121,7 +121,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 	right := i.stack.Pop()
 
 	switch operator {
-	case lexer.PLUS:
+	case token.PLUS:
 		{
 			l, leftOk := left.(int)
 			r, rightOk := right.(int)
@@ -142,7 +142,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 			}
 		}
 
-	case lexer.MINUS:
+	case token.MINUS:
 		l, leftOk := left.(int)
 		r, rightOk := right.(int)
 
@@ -151,7 +151,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 			return
 		}
 
-	case lexer.INTEGER_DIV:
+	case token.INTEGER_DIV:
 		l, leftOk := left.(int)
 		r, rightOk := right.(int)
 
@@ -160,7 +160,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 			return
 		}
 
-	case lexer.MULTIPLY:
+	case token.MULTIPLY:
 		l, leftOk := left.(int)
 		r, rightOk := right.(int)
 
@@ -169,7 +169,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 			return
 		}
 
-	case lexer.AND:
+	case token.AND:
 		l, leftOk := left.(bool)
 		r, rightOk := right.(bool)
 
@@ -178,7 +178,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 			return
 		}
 
-	case lexer.LT:
+	case token.LT:
 		l, leftOk := left.(int)
 		r, rightOk := right.(int)
 
@@ -187,7 +187,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 			return
 		}
 
-	case lexer.EQ:
+	case token.EQ:
 		i.stack.Push(left == right)
 		return
 
@@ -203,7 +203,7 @@ func (i *Interpreter) VisitUnaryExpr(node ast.UnaryExpr) {
 	val := i.stack.Pop()
 
 	switch node.Unary.Type() {
-	case lexer.NOT:
+	case token.NOT:
 		i.stack.Push(!val.(bool))
 	default:
 		panic(fmt.Sprintf("Unsupported unary type %v", node.Unary.Type()))

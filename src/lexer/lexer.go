@@ -4,7 +4,24 @@ import (
 	"fmt"
 	"strconv"
 	"unicode"
+
+	"github.com/mjjs/minipl-go/src/token"
 )
+
+// reservedKeywords maps the reserved keywords of MiniPL into the tokens for the keywords.
+var reservedKeywords map[string]token.Token = map[string]token.Token{
+	"var":    token.NewToken(token.VAR, nil),
+	"for":    token.NewToken(token.FOR, nil),
+	"end":    token.NewToken(token.END, nil),
+	"in":     token.NewToken(token.IN, nil),
+	"do":     token.NewToken(token.DO, nil),
+	"read":   token.NewToken(token.READ, nil),
+	"print":  token.NewToken(token.PRINT, nil),
+	"int":    token.NewToken(token.INTEGER, nil),
+	"string": token.NewToken(token.STRING, nil),
+	"bool":   token.NewToken(token.BOOLEAN, nil),
+	"assert": token.NewToken(token.ASSERT, nil),
+}
 
 // Lexer is the main structure of the lexer package. It takes in the source code
 // of the MiniPL application and turns it into tokens.
@@ -33,7 +50,7 @@ func New(sourceCode string) *Lexer {
 
 // GetNextToken returns the next token that the Lexer can parse from the
 // sourceCode given during initialization.
-func (l *Lexer) GetNextToken() Token {
+func (l *Lexer) GetNextToken() token.Token {
 	for !l.eof {
 		if unicode.IsSpace(l.currentChar) {
 			l.skipWhitespace()
@@ -68,7 +85,7 @@ func (l *Lexer) GetNextToken() Token {
 			}
 
 			l.advance()
-			return Token{tag: INTEGER_DIV}
+			return token.NewToken(token.INTEGER_DIV, nil)
 		}
 
 		if l.currentChar == '"' {
@@ -81,11 +98,11 @@ func (l *Lexer) GetNextToken() Token {
 			if !eof && next == '=' {
 				l.advance()
 				l.advance()
-				return Token{tag: ASSIGN}
+				return token.NewToken(token.ASSIGN, nil)
 			}
 
 			l.advance()
-			return Token{tag: COLON}
+			return token.NewToken(token.COLON, nil)
 		}
 
 		if l.currentChar == '.' {
@@ -93,64 +110,64 @@ func (l *Lexer) GetNextToken() Token {
 			if !eof && next == '.' {
 				l.advance()
 				l.advance()
-				return Token{tag: DOTDOT}
+				return token.NewToken(token.DOTDOT, nil)
 			}
 		}
 
 		if l.currentChar == ';' {
 			l.advance()
-			return Token{tag: SEMI}
+			return token.NewToken(token.SEMI, nil)
 		}
 
 		if l.currentChar == '!' {
 			l.advance()
-			return Token{tag: NOT}
+			return token.NewToken(token.NOT, nil)
 		}
 
 		if l.currentChar == '+' {
 			l.advance()
-			return Token{tag: PLUS}
+			return token.NewToken(token.PLUS, nil)
 		}
 
 		if l.currentChar == '-' {
 			l.advance()
-			return Token{tag: MINUS}
+			return token.NewToken(token.MINUS, nil)
 		}
 
 		if l.currentChar == '*' {
 			l.advance()
-			return Token{tag: MULTIPLY}
+			return token.NewToken(token.MULTIPLY, nil)
 		}
 
 		if l.currentChar == '<' {
 			l.advance()
-			return Token{tag: LT}
+			return token.NewToken(token.LT, nil)
 		}
 
 		if l.currentChar == '=' {
 			l.advance()
-			return Token{tag: EQ}
+			return token.NewToken(token.EQ, nil)
 		}
 
 		if l.currentChar == '&' {
 			l.advance()
-			return Token{tag: AND}
+			return token.NewToken(token.AND, nil)
 		}
 
 		if l.currentChar == '(' {
 			l.advance()
-			return Token{tag: LPAREN}
+			return token.NewToken(token.LPAREN, nil)
 		}
 
 		if l.currentChar == ')' {
 			l.advance()
-			return Token{tag: RPAREN}
+			return token.NewToken(token.RPAREN, nil)
 		}
 
 		panic(fmt.Sprintf("Could not tokenize character '%c'", l.currentChar))
 	}
 
-	return Token{tag: EOF}
+	return token.NewToken(token.EOF, nil)
 }
 
 // advance moves the position of the lexer forward one character and sets the
@@ -213,7 +230,7 @@ func (l *Lexer) skipBlockComment() {
 
 // ident reads a A-Za-z0-9_ string from the input program and returns an IDENT
 // token with the read string as a lexeme.
-func (l *Lexer) ident() Token {
+func (l *Lexer) ident() token.Token {
 	id := ""
 
 	// TODO: Check if unicode.X is allowed
@@ -222,18 +239,18 @@ func (l *Lexer) ident() Token {
 		l.advance()
 	}
 
-	token, ok := reservedKeywords[id]
+	t, ok := reservedKeywords[id]
 	if ok {
-		return token
+		return t
 	}
 
-	return Token{tag: IDENT, lexeme: id}
+	return token.NewToken(token.IDENT, id)
 }
 
 // number reads a number from the input program and returns an INTEGER_LITERAL
 // token with the number as a lexeme. MiniPL only supports integers, so we
 // do not consider floating point numbers.
-func (l *Lexer) number() Token {
+func (l *Lexer) number() token.Token {
 	numString := ""
 
 	for !l.eof && unicode.IsNumber(l.currentChar) {
@@ -246,12 +263,12 @@ func (l *Lexer) number() Token {
 		panic(fmt.Sprintf("Could not tokenize number %s, %v", numString, err))
 	}
 
-	return Token{tag: INTEGER_LITERAL, lexeme: num}
+	return token.NewToken(token.INTEGER_LITERAL, num)
 }
 
 // string reads a string from the input program and returns a STRING_LITERAL
 // token containing the read string as a lexeme.
-func (l *Lexer) string() Token {
+func (l *Lexer) string() token.Token {
 	str := ""
 
 	for !l.eof {
@@ -286,5 +303,5 @@ func (l *Lexer) string() Token {
 		l.advance()
 	}
 
-	return Token{tag: STRING_LITERAL, lexeme: str}
+	return token.NewToken(token.STRING_LITERAL, str)
 }
