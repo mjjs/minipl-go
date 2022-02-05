@@ -47,7 +47,8 @@ const (
 	EOF = "EOF"
 )
 
-var ReservedKeywords map[string]Token = map[string]Token{
+// reservedKeywords maps the reserved keywords of MiniPL into the tokens for the keywords.
+var reservedKeywords map[string]Token = map[string]Token{
 	"var":    {tag: VAR},
 	"for":    {tag: FOR},
 	"end":    {tag: END},
@@ -61,14 +62,25 @@ var ReservedKeywords map[string]Token = map[string]Token{
 	"assert": {tag: ASSERT},
 }
 
+// Token represents a single token found in the program by scanning it.
+// It consists of a tag and an optional lexeme.
 type Token struct {
 	tag    TokenTag
 	lexeme interface{}
 }
 
+// NewToken constructs a Token with the given tag and lexeme.
+// A nil lexeme can be passed in if the token is not expecting a lexeme.
 func NewToken(tag TokenTag, lexeme interface{}) Token { return Token{tag, lexeme} }
 
-func (t Token) ValueInt() int       { return t.lexeme.(int) }
-func (t Token) ValueBool() bool     { return t.lexeme.(bool) }
+// ValueInt returns the lexeme of the token as an integer or panics if the lexeme is not an integer.
+func (t Token) ValueInt() int { return t.lexeme.(int) }
+
+// ValueBool is like ValueInt but returns a boolean.
+func (t Token) ValueBool() bool { return t.lexeme.(bool) }
+
+// ValueString is like ValueInt but returns a String.
 func (t Token) ValueString() string { return t.lexeme.(string) }
-func (t Token) Type() TokenTag      { return t.tag }
+
+// Type returns the tag of the token.
+func (t Token) Type() TokenTag { return t.tag }

@@ -222,7 +222,7 @@ func (l *Lexer) ident() Token {
 		l.advance()
 	}
 
-	token, ok := ReservedKeywords[id]
+	token, ok := reservedKeywords[id]
 	if ok {
 		return token
 	}
