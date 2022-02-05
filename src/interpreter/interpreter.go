@@ -24,8 +24,12 @@ func New() *Interpreter {
 	}
 }
 
-func (i *Interpreter) Run(stmts ast.Stmts) {
-	stmts.Accept(i)
+func (i *Interpreter) Run(program ast.Prog) {
+	program.Accept(i)
+}
+
+func (i *Interpreter) VisitProg(node ast.Prog) {
+	node.Statements.Accept(i)
 }
 
 func (i *Interpreter) VisitStmts(node ast.Stmts) {

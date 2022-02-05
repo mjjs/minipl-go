@@ -9,13 +9,13 @@ import (
 
 var analyzerTestCases = []struct {
 	name        string
-	input       ast.Stmts
+	input       ast.Prog
 	shouldError bool
 }{
 	// ASSIGNMENTS
 	{
 		name: "Assignment before declaration",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.AssignStmt{
 					Identifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "x")},
@@ -23,11 +23,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "Assignment after declaration",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
@@ -40,11 +41,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "Assignment with unmatched types",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
@@ -56,12 +58,13 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	// DECLARATION
 	{
 		name: "Duplicate declaration",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
@@ -72,24 +75,26 @@ var analyzerTestCases = []struct {
 					VariableType: lexer.NewToken(lexer.INTEGER, nil),
 				},
 			},
+		},
 		},
 		shouldError: true,
 	},
 	// ASSERT
 	{
 		name: "Assert with non-boolean type",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.AssertStmt{
 					Expression: ast.NullaryExpr{Operand: ast.StringOpnd{Value: "foo"}},
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "Assert with boolean type",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.AssertStmt{
 					Expression: ast.BinaryExpr{
@@ -100,12 +105,13 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	// NOT
 	{
 		name: "Not operator with non-boolean operand",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
@@ -117,11 +123,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "Not operator with boolean operand",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
@@ -134,12 +141,13 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	// EQUALITY OPERATOR
 	{
 		name: "Equality with ints",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -150,11 +158,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "Equality with strings",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -165,11 +174,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "Equality with booleans",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -188,11 +198,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "Equality with unmatched types",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -202,13 +213,14 @@ var analyzerTestCases = []struct {
 					},
 				},
 			},
+		},
 		},
 		shouldError: true,
 	},
 	// PLUS OPERATOR
 	{
 		name: "Plus with ints",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -219,11 +231,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "Plus with strings",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -234,11 +247,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "Plus with booleans",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -257,11 +271,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "Plus with unmatched types",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -271,13 +286,14 @@ var analyzerTestCases = []struct {
 					},
 				},
 			},
+		},
 		},
 		shouldError: true,
 	},
 	// MINUS OPERATOR
 	{
 		name: "Minus with ints",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -288,11 +304,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "Minus with strings",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -303,11 +320,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "Minus with booleans",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -326,11 +344,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "Minus with unmatched types",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -340,13 +359,14 @@ var analyzerTestCases = []struct {
 					},
 				},
 			},
+		},
 		},
 		shouldError: true,
 	},
 	// MULTIPLY OPERATOR
 	{
 		name: "Multiply with ints",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -357,11 +377,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "Multiply with strings",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -372,11 +393,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "Multiply with booleans",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -395,11 +417,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "Multiply with unmatched types",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -409,13 +432,14 @@ var analyzerTestCases = []struct {
 					},
 				},
 			},
+		},
 		},
 		shouldError: true,
 	},
 	// INTEGER DIVISION OPERATOR
 	{
 		name: "Integer division with ints",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -426,11 +450,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "Integer division with strings",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -441,11 +466,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "Integer division with booleans",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -464,11 +490,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "Integer division with unmatched types",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -478,13 +505,14 @@ var analyzerTestCases = []struct {
 					},
 				},
 			},
+		},
 		},
 		shouldError: true,
 	},
 	// AND OPERATOR
 	{
 		name: "AND with ints",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -495,11 +523,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "AND with strings",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -510,11 +539,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "AND with booleans",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -533,11 +563,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "AND with unmatched types",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -547,13 +578,14 @@ var analyzerTestCases = []struct {
 					},
 				},
 			},
+		},
 		},
 		shouldError: true,
 	},
 	// LESS THAN OPERATOR
 	{
 		name: "LESS THAN with ints",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -564,11 +596,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "LESS THAN with strings",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -579,11 +612,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "LESS THAN with booleans",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -602,11 +636,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "LESS THAN with unmatched types",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -617,24 +652,26 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	// READ
 	{
 		name: "Read statement to undeclared variable",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.ReadStmt{
 					TargetIdentifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "asd")},
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	// FOR LOOP
 	{
 		name: "For statement with undeclared index",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.ForStmt{
 					Index:      ast.Ident{Id: lexer.NewToken(lexer.IDENT, "foo")},
@@ -644,11 +681,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "For statement with non-integer index",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
@@ -662,11 +700,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "For statement with non-integer lower range expr",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
@@ -680,11 +719,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "For statement with non-integer higher range expr",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
@@ -698,11 +738,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "For loop index modified inside loop",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
@@ -723,11 +764,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: true,
 	},
 	{
 		name: "For loop index modified after loop",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
@@ -745,11 +787,12 @@ var analyzerTestCases = []struct {
 				},
 			},
 		},
+		},
 		shouldError: false,
 	},
 	{
 		name: "Valid for statement",
-		input: ast.Stmts{
+		input: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "i"),
@@ -762,6 +805,7 @@ var analyzerTestCases = []struct {
 					Statements: ast.Stmts{},
 				},
 			},
+		},
 		},
 		shouldError: false,
 	},

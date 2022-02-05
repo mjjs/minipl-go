@@ -3,6 +3,7 @@ package ast
 import "github.com/mjjs/minipl-go/src/lexer"
 
 type Visitor interface {
+	VisitProg(Prog)
 	VisitStmts(Stmts)
 
 	VisitAssignStmt(AssignStmt)
@@ -32,6 +33,7 @@ type Stmt interface {
 	stmtNode()
 }
 
+type Prog struct{ Statements Stmts }
 type Stmts struct{ Statements []Stmt }
 type ReadStmt struct{ TargetIdentifier Ident }
 type PrintStmt struct{ Expression Expr }
@@ -71,6 +73,7 @@ type StringOpnd struct{ Value string }
 
 type Ident struct{ Id lexer.Token }
 
+func (n Prog) Accept(v Visitor)        { v.VisitProg(n) }
 func (n Stmts) Accept(v Visitor)       { v.VisitStmts(n) }
 func (n ForStmt) Accept(v Visitor)     { v.VisitForStmt(n) }
 func (n NumberOpnd) Accept(v Visitor)  { v.VisitNumberOpnd(n) }

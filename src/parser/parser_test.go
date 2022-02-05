@@ -11,7 +11,7 @@ import (
 var parseTestCases = []struct {
 	name           string
 	lexerOutput    []lexer.Token
-	expectedOutput ast.Stmts
+	expectedOutput ast.Prog
 	shouldError    bool
 }{
 	{
@@ -25,7 +25,7 @@ var parseTestCases = []struct {
 			lexer.NewToken(lexer.INTEGER_LITERAL, 5),
 			lexer.NewToken(lexer.SEMI, nil),
 		},
-		expectedOutput: ast.Stmts{
+		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "x"),
@@ -35,6 +35,7 @@ var parseTestCases = []struct {
 					},
 				},
 			},
+		},
 		},
 	},
 	{
@@ -61,7 +62,7 @@ var parseTestCases = []struct {
 			lexer.NewToken(lexer.BOOLEAN, nil),
 			lexer.NewToken(lexer.SEMI, nil),
 		},
-		expectedOutput: ast.Stmts{
+		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "x"),
@@ -77,6 +78,7 @@ var parseTestCases = []struct {
 				},
 			},
 		},
+		},
 	},
 	{
 		name: "Assignment",
@@ -86,7 +88,7 @@ var parseTestCases = []struct {
 			lexer.NewToken(lexer.STRING_LITERAL, "bar"),
 			lexer.NewToken(lexer.SEMI, nil),
 		},
-		expectedOutput: ast.Stmts{
+		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.AssignStmt{
 					Identifier: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "foo")},
@@ -95,6 +97,7 @@ var parseTestCases = []struct {
 					},
 				},
 			},
+		},
 		},
 	},
 	{
@@ -121,7 +124,7 @@ var parseTestCases = []struct {
 			lexer.NewToken(lexer.FOR, nil),
 			lexer.NewToken(lexer.SEMI, nil),
 		},
-		expectedOutput: ast.Stmts{
+		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.ForStmt{
 					Index: ast.Ident{Id: lexer.NewToken(lexer.IDENT, "i")},
@@ -148,6 +151,7 @@ var parseTestCases = []struct {
 				},
 			},
 		},
+		},
 	},
 	{
 		name: "Assert statement",
@@ -160,7 +164,7 @@ var parseTestCases = []struct {
 			lexer.NewToken(lexer.RPAREN, nil),
 			lexer.NewToken(lexer.SEMI, nil),
 		},
-		expectedOutput: ast.Stmts{
+		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.AssertStmt{
 					Expression: ast.BinaryExpr{
@@ -170,6 +174,7 @@ var parseTestCases = []struct {
 					},
 				},
 			},
+		},
 		},
 	},
 	{
@@ -204,7 +209,7 @@ var parseTestCases = []struct {
 
 			lexer.NewToken(lexer.SEMI, nil),
 		},
-		expectedOutput: ast.Stmts{
+		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.BinaryExpr{
@@ -223,6 +228,7 @@ var parseTestCases = []struct {
 				},
 			},
 		},
+		},
 	},
 	{
 		name: "Less than comparison",
@@ -238,7 +244,7 @@ var parseTestCases = []struct {
 			lexer.NewToken(lexer.INTEGER_LITERAL, 2),
 			lexer.NewToken(lexer.SEMI, nil),
 		},
-		expectedOutput: ast.Stmts{
+		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
@@ -250,6 +256,7 @@ var parseTestCases = []struct {
 					},
 				},
 			},
+		},
 		},
 	},
 	{
@@ -290,7 +297,7 @@ var parseTestCases = []struct {
 
 			lexer.NewToken(lexer.SEMI, nil),
 		},
-		expectedOutput: ast.Stmts{
+		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.DeclStmt{
 					Identifier:   lexer.NewToken(lexer.IDENT, "foo"),
@@ -319,6 +326,7 @@ var parseTestCases = []struct {
 				},
 			},
 		},
+		},
 	},
 	{
 		name: "Logical not",
@@ -331,7 +339,7 @@ var parseTestCases = []struct {
 			lexer.NewToken(lexer.RPAREN, nil),
 			lexer.NewToken(lexer.SEMI, nil),
 		},
-		expectedOutput: ast.Stmts{
+		expectedOutput: ast.Prog{Statements: ast.Stmts{
 			Statements: []ast.Stmt{
 				ast.PrintStmt{
 					Expression: ast.UnaryExpr{
@@ -342,6 +350,7 @@ var parseTestCases = []struct {
 					},
 				},
 			},
+		},
 		},
 	},
 }

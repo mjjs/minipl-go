@@ -18,9 +18,13 @@ func NewAnalyzer() *Analyzer {
 	return &Analyzer{symbols: NewSymbolTable()}
 }
 
-func (a *Analyzer) Analyze(statements ast.Stmts) error {
-	statements.Accept(a)
+func (a *Analyzer) Analyze(program ast.Prog) error {
+	program.Accept(a)
 	return a.err
+}
+
+func (i *Analyzer) VisitProg(node ast.Prog) {
+	node.Statements.Accept(i)
 }
 
 func (i *Analyzer) VisitStmts(node ast.Stmts) {

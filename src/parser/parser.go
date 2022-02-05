@@ -31,18 +31,18 @@ func New(lexer Lexer) *Parser {
 // Parse reads tokens from the lexer and verifies that the program is
 // syntactically valid. An abstract syntax tree and an optional error is
 // returned.
-func (p *Parser) Parse() (ast.Stmts, error) {
-	root := p.parseStatements()
+func (p *Parser) Parse() (ast.Prog, error) {
+	statements := p.parseStatements()
 
 	if p.currentToken.Type() != lexer.EOF {
-		return ast.Stmts{}, fmt.Errorf(
+		return ast.Prog{}, fmt.Errorf(
 			"Parsing the program failed. Expected %v, found %v",
 			lexer.EOF,
 			p.currentToken.Type(),
 		)
 	}
 
-	return root, nil
+	return ast.Prog{Statements: statements}, nil
 }
 
 // parseStatements goes through all the statements of the lexer and parses
