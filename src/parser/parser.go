@@ -3,8 +3,8 @@ package parser
 import (
 	"fmt"
 
-	"github.com/mjjs/minipl-go/src/ast"
-	"github.com/mjjs/minipl-go/src/token"
+	"github.com/mjjs/minipl-go/ast"
+	"github.com/mjjs/minipl-go/token"
 )
 
 type Lexer interface{ GetNextToken() token.Token }

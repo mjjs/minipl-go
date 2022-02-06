@@ -7,9 +7,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/mjjs/minipl-go/src/ast"
-	"github.com/mjjs/minipl-go/src/stack"
-	"github.com/mjjs/minipl-go/src/token"
+	"github.com/mjjs/minipl-go/ast"
+	"github.com/mjjs/minipl-go/stack"
+	"github.com/mjjs/minipl-go/token"
 )
 
 type Interpreter struct {

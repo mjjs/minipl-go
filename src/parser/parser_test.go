@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mjjs/minipl-go/src/ast"
-	"github.com/mjjs/minipl-go/src/token"
+	"github.com/mjjs/minipl-go/ast"
+	"github.com/mjjs/minipl-go/token"
 )
 
 var parseTestCases = []struct {

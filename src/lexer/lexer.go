@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"unicode"
 
-	"github.com/mjjs/minipl-go/src/token"
+	"github.com/mjjs/minipl-go/token"
 )
 
 // reservedKeywords maps the reserved keywords of MiniPL into the tokens for the keywords.

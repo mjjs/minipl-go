@@ -3,8 +3,8 @@ package semantics
 import (
 	"testing"
 
-	"github.com/mjjs/minipl-go/src/ast"
-	"github.com/mjjs/minipl-go/src/token"
+	"github.com/mjjs/minipl-go/ast"
+	"github.com/mjjs/minipl-go/token"
 )
 
 var analyzerTestCases = []struct {

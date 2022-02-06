@@ -3,7 +3,7 @@ package lexer
 import (
 	"testing"
 
-	"github.com/mjjs/minipl-go/src/token"
+	"github.com/mjjs/minipl-go/token"
 )
 
 var getNextTokenTestCases = []struct {
