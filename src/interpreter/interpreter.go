@@ -3,6 +3,7 @@ package interpreter
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 
@@ -14,13 +15,19 @@ import (
 type Interpreter struct {
 	stack *stack.Stack
 
-	variables map[string]interface{}
+	variables    map[string]interface{}
+	outputWriter io.Writer
 }
 
 func New() *Interpreter {
+	return NewWithOutputWriter(os.Stdin)
+}
+
+func NewWithOutputWriter(output io.Writer) *Interpreter {
 	return &Interpreter{
-		stack:     stack.New(),
-		variables: make(map[string]interface{}),
+		stack:        stack.New(),
+		variables:    make(map[string]interface{}),
+		outputWriter: output,
 	}
 }
 
@@ -102,7 +109,7 @@ func (i *Interpreter) VisitReadStmt(node ast.ReadStmt) {
 
 func (i *Interpreter) VisitPrintStmt(node ast.PrintStmt) {
 	node.Expression.Accept(i)
-	fmt.Print(i.stack.Pop())
+	fmt.Fprint(i.outputWriter, i.stack.Pop())
 }
 func (i *Interpreter) VisitAssertStmt(node ast.AssertStmt) {
 	node.Expression.Accept(i)
