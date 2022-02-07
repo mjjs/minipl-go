@@ -63,7 +63,9 @@ func (l *Lexer) GetNextToken() token.Token {
 
 		if unicode.IsNumber(l.currentChar) {
 			if l.currentChar == '0' {
-				panic("Number beginning with 0")
+				if next, eof := l.peek(); !eof && unicode.IsNumber(next) {
+					panic("Number beginning with 0")
+				}
 			}
 			return l.number()
 		}

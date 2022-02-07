@@ -43,6 +43,11 @@ var getNextTokenTestCases = []struct {
 		shouldPanic: true,
 	},
 	{
+		name:           "Integer with only zero",
+		input:          "0",
+		expectedTokens: []token.Token{token.NewToken(token.INTEGER_LITERAL, 0)},
+	},
+	{
 		name:           "String literal",
 		input:          "\"C-beams\"",
 		expectedTokens: []token.Token{token.NewToken(token.STRING_LITERAL, "C-beams")},
@@ -316,13 +321,16 @@ func TestGetNextToken(t *testing.T) {
 			defer func() {
 				if r := recover(); r == nil && testCase.shouldPanic {
 					t.Error("Expected a panic")
+				} else if r != nil && !testCase.shouldPanic {
+					t.Errorf("Did not expect a panic, got '%v'", r)
 				}
 			}()
 
 			lexer := New(testCase.input)
 
-			if testCase.shouldPanic {
-				lexer.GetNextToken()
+			if len(testCase.expectedTokens) == 0 {
+				for lexer.GetNextToken() != token.NewToken(token.EOF, nil) {
+				}
 			}
 
 			for _, expectedToken := range testCase.expectedTokens {
