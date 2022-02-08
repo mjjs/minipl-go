@@ -42,7 +42,7 @@ func (i *Analyzer) VisitDeclStmt(node ast.DeclStmt) {
 		return
 	}
 
-	name := node.Identifier.ValueString()
+	name := node.Identifier.Value()
 	_, exists := i.symbols.Get(name)
 	if exists {
 		i.err = fmt.Errorf("Variable %s has already been declared", name)
@@ -80,12 +80,12 @@ func (i *Analyzer) VisitAssignStmt(node ast.AssignStmt) {
 	node.Identifier.Accept(i)
 	lsType := i.lastType
 
-	symbol, _ := i.symbols.Get(node.Identifier.Id.ValueString())
+	symbol, _ := i.symbols.Get(node.Identifier.Id.Value())
 
 	if symbol.Locked() {
 		i.err = fmt.Errorf(
 			"Cannot assign to a locked variable %s",
-			node.Identifier.Id.ValueString(),
+			node.Identifier.Id.Value(),
 		)
 
 		return
@@ -108,7 +108,7 @@ func (i *Analyzer) VisitForStmt(node ast.ForStmt) {
 	node.Index.Accept(i)
 	indexType := i.lastType
 
-	i.symbols.Lock(node.Index.Id.ValueString())
+	i.symbols.Lock(node.Index.Id.Value())
 
 	node.Low.Accept(i)
 	lowType := i.lastType
@@ -133,7 +133,7 @@ func (i *Analyzer) VisitForStmt(node ast.ForStmt) {
 
 	node.Statements.Accept(i)
 
-	i.symbols.UnLock(node.Index.Id.ValueString())
+	i.symbols.UnLock(node.Index.Id.Value())
 }
 
 func (i *Analyzer) VisitReadStmt(node ast.ReadStmt) {
@@ -266,7 +266,7 @@ func (i *Analyzer) VisitIdent(node ast.Ident) {
 		return
 	}
 
-	name := node.Id.ValueString()
+	name := node.Id.Value()
 	symbol, exists := i.symbols.Get(name)
 	if !exists {
 		i.err = fmt.Errorf("Variable %s has not been declared", name)

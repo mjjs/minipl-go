@@ -2,7 +2,6 @@ package lexer
 
 import (
 	"fmt"
-	"strconv"
 	"unicode"
 
 	"github.com/mjjs/minipl-go/token"
@@ -10,17 +9,17 @@ import (
 
 // reservedKeywords maps the reserved keywords of MiniPL into the tokens for the keywords.
 var reservedKeywords map[string]token.Token = map[string]token.Token{
-	"var":    token.NewToken(token.VAR, nil),
-	"for":    token.NewToken(token.FOR, nil),
-	"end":    token.NewToken(token.END, nil),
-	"in":     token.NewToken(token.IN, nil),
-	"do":     token.NewToken(token.DO, nil),
-	"read":   token.NewToken(token.READ, nil),
-	"print":  token.NewToken(token.PRINT, nil),
-	"int":    token.NewToken(token.INTEGER, nil),
-	"string": token.NewToken(token.STRING, nil),
-	"bool":   token.NewToken(token.BOOLEAN, nil),
-	"assert": token.NewToken(token.ASSERT, nil),
+	"var":    token.New(token.VAR, ""),
+	"for":    token.New(token.FOR, ""),
+	"end":    token.New(token.END, ""),
+	"in":     token.New(token.IN, ""),
+	"do":     token.New(token.DO, ""),
+	"read":   token.New(token.READ, ""),
+	"print":  token.New(token.PRINT, ""),
+	"int":    token.New(token.INTEGER, ""),
+	"string": token.New(token.STRING, ""),
+	"bool":   token.New(token.BOOLEAN, ""),
+	"assert": token.New(token.ASSERT, ""),
 }
 
 // Lexer is the main structure of the lexer package. It takes in the source code
@@ -87,7 +86,7 @@ func (l *Lexer) GetNextToken() token.Token {
 			}
 
 			l.advance()
-			return token.NewToken(token.INTEGER_DIV, nil)
+			return token.New(token.INTEGER_DIV, "")
 		}
 
 		if l.currentChar == '"' {
@@ -100,11 +99,11 @@ func (l *Lexer) GetNextToken() token.Token {
 			if !eof && next == '=' {
 				l.advance()
 				l.advance()
-				return token.NewToken(token.ASSIGN, nil)
+				return token.New(token.ASSIGN, "")
 			}
 
 			l.advance()
-			return token.NewToken(token.COLON, nil)
+			return token.New(token.COLON, "")
 		}
 
 		if l.currentChar == '.' {
@@ -112,64 +111,64 @@ func (l *Lexer) GetNextToken() token.Token {
 			if !eof && next == '.' {
 				l.advance()
 				l.advance()
-				return token.NewToken(token.DOTDOT, nil)
+				return token.New(token.DOTDOT, "")
 			}
 		}
 
 		if l.currentChar == ';' {
 			l.advance()
-			return token.NewToken(token.SEMI, nil)
+			return token.New(token.SEMI, "")
 		}
 
 		if l.currentChar == '!' {
 			l.advance()
-			return token.NewToken(token.NOT, nil)
+			return token.New(token.NOT, "")
 		}
 
 		if l.currentChar == '+' {
 			l.advance()
-			return token.NewToken(token.PLUS, nil)
+			return token.New(token.PLUS, "")
 		}
 
 		if l.currentChar == '-' {
 			l.advance()
-			return token.NewToken(token.MINUS, nil)
+			return token.New(token.MINUS, "")
 		}
 
 		if l.currentChar == '*' {
 			l.advance()
-			return token.NewToken(token.MULTIPLY, nil)
+			return token.New(token.MULTIPLY, "")
 		}
 
 		if l.currentChar == '<' {
 			l.advance()
-			return token.NewToken(token.LT, nil)
+			return token.New(token.LT, "")
 		}
 
 		if l.currentChar == '=' {
 			l.advance()
-			return token.NewToken(token.EQ, nil)
+			return token.New(token.EQ, "")
 		}
 
 		if l.currentChar == '&' {
 			l.advance()
-			return token.NewToken(token.AND, nil)
+			return token.New(token.AND, "")
 		}
 
 		if l.currentChar == '(' {
 			l.advance()
-			return token.NewToken(token.LPAREN, nil)
+			return token.New(token.LPAREN, "")
 		}
 
 		if l.currentChar == ')' {
 			l.advance()
-			return token.NewToken(token.RPAREN, nil)
+			return token.New(token.RPAREN, "")
 		}
 
 		panic(fmt.Sprintf("Could not tokenize character '%c'", l.currentChar))
 	}
 
-	return token.NewToken(token.EOF, nil)
+	return token.New(token.EOF, "")
 }
 
 // advance moves the position of the lexer forward one character and sets the
@@ -246,7 +245,7 @@ func (l *Lexer) ident() token.Token {
 		return t
 	}
 
-	return token.NewToken(token.IDENT, id)
+	return token.New(token.IDENT, id)
 }
 
 // number reads a number from the input program and returns an INTEGER_LITERAL
@@ -260,12 +259,7 @@ func (l *Lexer) number() token.Token {
 		l.advance()
 	}
 
-	num, err := strconv.Atoi(numString)
-	if err != nil {
-		panic(fmt.Sprintf("Could not tokenize number %s, %v", numString, err))
-	}
-
-	return token.NewToken(token.INTEGER_LITERAL, num)
+	return token.New(token.INTEGER_LITERAL, numString)
 }
 
 // string reads a string from the input program and returns a STRING_LITERAL
@@ -305,5 +299,5 @@ func (l *Lexer) string() token.Token {
 		l.advance()
 	}
 
-	return token.NewToken(token.STRING_LITERAL, str)
+	return token.New(token.STRING_LITERAL, str)
 }

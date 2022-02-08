@@ -1,5 +1,7 @@
 package token
 
+import "strconv"
+
 type TokenTag string
 
 const (
@@ -51,21 +53,47 @@ const (
 // It consists of a tag and an optional lexeme.
 type Token struct {
 	tag    TokenTag
-	lexeme interface{}
+	lexeme string
 }
 
-// NewToken constructs a Token with the given tag and lexeme.
-// A nil lexeme can be passed in if the token is not expecting a lexeme.
-func NewToken(tag TokenTag, lexeme interface{}) Token { return Token{tag, lexeme} }
+// New constructs a Token with the given tag and lexeme.
+// An empty lexeme can be passed in if the token is not expecting a lexeme.
+func New(tag TokenTag, lexeme string) Token { return Token{tag, lexeme} }
 
 // ValueInt returns the lexeme of the token as an integer or panics if the lexeme is not an integer.
-func (t Token) ValueInt() int { return t.lexeme.(int) }
+func (t Token) ValueInt() int {
+	if t.lexeme == "" {
+		panic("Attempting to take value of an empty lexeme")
+	}
+
+	num, err := strconv.Atoi(t.lexeme)
+	if err != nil {
+		panic(err)
+	}
+	return num
+}
 
 // ValueBool is like ValueInt but returns a boolean.
-func (t Token) ValueBool() bool { return t.lexeme.(bool) }
+func (t Token) ValueBool() bool {
+	if t.lexeme == "" {
+		panic("Attempting to take value of an empty lexeme")
+	}
 
-// ValueString is like ValueInt but returns a String.
-func (t Token) ValueString() string { return t.lexeme.(string) }
+	x, err := strconv.ParseBool(t.lexeme)
+	if err != nil {
+		panic(err)
+	}
+	return x
+}
+
+// Value returns the value of the lexeme.
+func (t Token) Value() string {
+	if t.lexeme == "" {
+		panic("Attempting to take value of an empty lexeme")
+	}
+
+	return t.lexeme
+}
 
 // Type returns the tag of the token.
 func (t Token) Type() TokenTag { return t.tag }

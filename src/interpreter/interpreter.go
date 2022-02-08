@@ -46,14 +46,14 @@ func (i *Interpreter) VisitStmts(node ast.Stmts) {
 }
 
 func (i *Interpreter) VisitAssignStmt(node ast.AssignStmt) {
-	varName := node.Identifier.Id.ValueString()
+	varName := node.Identifier.Id.Value()
 	node.Expression.Accept(i)
 	value := i.stack.Pop()
 	i.variables[varName] = value
 }
 
 func (i *Interpreter) VisitDeclStmt(node ast.DeclStmt) {
-	varName := node.Identifier.ValueString()
+	varName := node.Identifier.Value()
 	var value interface{}
 
 	if node.Expression != nil {
@@ -74,7 +74,7 @@ func (i *Interpreter) VisitDeclStmt(node ast.DeclStmt) {
 }
 
 func (i *Interpreter) VisitForStmt(node ast.ForStmt) {
-	idx := node.Index.Id.ValueString()
+	idx := node.Index.Id.Value()
 
 	node.Low.Accept(i)
 	low := i.stack.Pop().(int)
@@ -89,7 +89,7 @@ func (i *Interpreter) VisitForStmt(node ast.ForStmt) {
 }
 
 func (i *Interpreter) VisitReadStmt(node ast.ReadStmt) {
-	varName := node.TargetIdentifier.Id.ValueString()
+	varName := node.TargetIdentifier.Id.Value()
 
 	x := i.variables[varName]
 
@@ -230,5 +230,5 @@ func (i *Interpreter) VisitStringOpnd(node ast.StringOpnd) {
 }
 
 func (i *Interpreter) VisitIdent(node ast.Ident) {
-	i.stack.Push(i.variables[node.Id.ValueString()])
+	i.stack.Push(i.variables[node.Id.Value()])
 }

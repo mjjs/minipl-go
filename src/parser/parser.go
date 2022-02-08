@@ -202,7 +202,7 @@ func (p *Parser) parseOperand() ast.Node {
 		return ast.NumberOpnd{Value: val}
 
 	case token.STRING_LITERAL:
-		val := p.currentToken.ValueString()
+		val := p.currentToken.Value()
 		p.eat(token.STRING_LITERAL)
 		return ast.StringOpnd{Value: val}
 
