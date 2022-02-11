@@ -256,6 +256,8 @@ func (l *Lexer) skipBlockComment() {
 			l.advance()
 			l.advance()
 			return
+		} else if !eof {
+			l.advance()
 		}
 	}
 }

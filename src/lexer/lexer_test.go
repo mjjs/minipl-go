@@ -431,6 +431,19 @@ var getNextTokenTestCases = []struct {
 			{Line: 1, Column: 35},
 		},
 	},
+	{
+		name: "Multiline block comment is skipped",
+		input: `/*
+*
+*/
+1`,
+		expectedTokens: []token.Token{
+			token.New(token.INTEGER_LITERAL, "1"),
+		},
+		expectedPositions: []token.Position{
+			{Line: 4, Column: 1},
+		},
+	},
 }
 
 func TestGetNextToken(t *testing.T) {
