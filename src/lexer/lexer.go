@@ -29,13 +29,18 @@ type Lexer struct {
 	currentChar rune
 	pos         int
 	eof         bool
+
+	currentLine int
+	currentCol  int
 }
 
 // New returns a properly initialized pointer to a new Lexer instance using
 // sourceCode as the input program.
 func New(sourceCode string) *Lexer {
 	lexer := &Lexer{
-		sourceCode: []rune(sourceCode),
+		sourceCode:  []rune(sourceCode),
+		currentLine: 1,
+		currentCol:  1,
 	}
 
 	if len(sourceCode) == 0 {
@@ -49,7 +54,7 @@ func New(sourceCode string) *Lexer {
 
 // GetNextToken returns the next token that the Lexer can parse from the
 // sourceCode given during initialization.
-func (l *Lexer) GetNextToken() token.Token {
+func (l *Lexer) GetNextToken() (token.Token, token.Position) {
 	for !l.eof {
 		if unicode.IsSpace(l.currentChar) {
 			l.skipWhitespace()
@@ -57,7 +62,8 @@ func (l *Lexer) GetNextToken() token.Token {
 		}
 
 		if unicode.IsLetter(l.currentChar) {
-			return l.ident()
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
+			return l.ident(), pos
 		}
 
 		if unicode.IsNumber(l.currentChar) {
@@ -66,7 +72,9 @@ func (l *Lexer) GetNextToken() token.Token {
 					panic("Number beginning with 0")
 				}
 			}
-			return l.number()
+
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
+			return l.number(), pos
 		}
 
 		if l.currentChar == '/' {
@@ -85,90 +93,106 @@ func (l *Lexer) GetNextToken() token.Token {
 				continue
 			}
 
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.INTEGER_DIV, "")
+			return token.New(token.INTEGER_DIV, ""), pos
 		}
 
 		if l.currentChar == '"' {
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return l.string()
+			return l.string(), pos
 		}
 
 		if l.currentChar == ':' {
 			next, eof := l.peek()
 			if !eof && next == '=' {
+				pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 				l.advance()
 				l.advance()
-				return token.New(token.ASSIGN, "")
+				return token.New(token.ASSIGN, ""), pos
 			}
 
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.COLON, "")
+			return token.New(token.COLON, ""), pos
 		}
 
 		if l.currentChar == '.' {
 			next, eof := l.peek()
 			if !eof && next == '.' {
+				pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 				l.advance()
 				l.advance()
-				return token.New(token.DOTDOT, "")
+				return token.New(token.DOTDOT, ""), pos
 			}
 		}
 
 		if l.currentChar == ';' {
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.SEMI, "")
+			return token.New(token.SEMI, ""), pos
 		}
 
 		if l.currentChar == '!' {
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.NOT, "")
+			return token.New(token.NOT, ""), pos
 		}
 
 		if l.currentChar == '+' {
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.PLUS, "")
+			return token.New(token.PLUS, ""), pos
 		}
 
 		if l.currentChar == '-' {
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.MINUS, "")
+			return token.New(token.MINUS, ""), pos
 		}
 
 		if l.currentChar == '*' {
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.MULTIPLY, "")
+			return token.New(token.MULTIPLY, ""), pos
 		}
 
 		if l.currentChar == '<' {
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.LT, "")
+			return token.New(token.LT, ""), pos
 		}
 
 		if l.currentChar == '=' {
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.EQ, "")
+			return token.New(token.EQ, ""), pos
 		}
 
 		if l.currentChar == '&' {
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.AND, "")
+			return token.New(token.AND, ""), pos
 		}
 
 		if l.currentChar == '(' {
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.LPAREN, "")
+			return token.New(token.LPAREN, ""), pos
 		}
 
 		if l.currentChar == ')' {
+			pos := token.Position{Line: l.currentLine, Column: l.currentCol}
 			l.advance()
-			return token.New(token.RPAREN, "")
+			return token.New(token.RPAREN, ""), pos
 		}
 
 		panic(fmt.Sprintf("Could not tokenize character '%c'", l.currentChar))
 	}
 
-	return token.New(token.EOF, "")
+	pos := token.Position{Line: l.currentLine, Column: l.currentCol}
+	return token.New(token.EOF, ""), pos
 }
 
 // advance moves the position of the lexer forward one character and sets the
@@ -179,6 +203,13 @@ func (l *Lexer) advance() {
 	if l.pos > len(l.sourceCode)-1 {
 		l.eof = true
 	} else {
+		if l.currentChar == '\n' {
+			l.currentLine++
+			l.currentCol = 1
+		} else {
+			l.currentCol++
+		}
+
 		l.currentChar = rune(l.sourceCode[l.pos])
 	}
 }

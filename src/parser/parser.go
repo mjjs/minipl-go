@@ -7,13 +7,16 @@ import (
 	"github.com/mjjs/minipl-go/token"
 )
 
-type Lexer interface{ GetNextToken() token.Token }
+type Lexer interface {
+	GetNextToken() (token.Token, token.Position)
+}
 
 // Parser is the main struct of the parser package. The Parser should be
 // initialized with New instead of used directly.
 type Parser struct {
 	lexer        Lexer
 	currentToken token.Token
+	currentPos   token.Position
 }
 
 // New returns a properly initialized pointer instance to a Parser.
@@ -22,9 +25,12 @@ func New(lexer Lexer) *Parser {
 		panic("Attempting to construct a Parser with a nil Lexer")
 	}
 
+	tok, pos := lexer.GetNextToken()
+
 	return &Parser{
 		lexer:        lexer,
-		currentToken: lexer.GetNextToken(),
+		currentToken: tok,
+		currentPos:   pos,
 	}
 }
 
@@ -71,6 +77,8 @@ func (p *Parser) parseStatements() ast.Stmts {
 func (p *Parser) parseStatement() ast.Stmt {
 	var statement ast.Stmt
 
+	pos := p.currentPos
+
 	switch p.currentToken.Type() {
 	case token.VAR:
 		p.eat(token.VAR)
@@ -83,6 +91,7 @@ func (p *Parser) parseStatement() ast.Stmt {
 			statement = ast.DeclStmt{
 				Identifier:   ident,
 				VariableType: variableType,
+				Pos:          pos,
 			}
 
 			break
@@ -95,22 +104,29 @@ func (p *Parser) parseStatement() ast.Stmt {
 			Identifier:   ident,
 			VariableType: variableType,
 			Expression:   expr,
+			Pos:          pos,
 		}
 
 	case token.IDENT:
 		ident := p.currentToken
+
 		p.eat(token.IDENT)
 		p.eat(token.ASSIGN)
 		expr := p.parseExpression()
 
 		statement = ast.AssignStmt{
-			Identifier: ast.Ident{Id: ident},
+			Identifier: ast.Ident{
+				Id:  ident,
+				Pos: pos,
+			},
 			Expression: expr,
+			Pos:        pos,
 		}
 
 	case token.FOR:
 		p.eat(token.FOR)
 		ident := p.currentToken
+		identPos := p.currentPos
 		p.eat(token.IDENT)
 		p.eat(token.IN)
 		low := p.parseExpression()
@@ -121,25 +137,41 @@ func (p *Parser) parseStatement() ast.Stmt {
 		p.eat(token.END)
 		p.eat(token.FOR)
 		statement = ast.ForStmt{
-			Index:      ast.Ident{Id: ident},
+			Index: ast.Ident{
+				Id:  ident,
+				Pos: identPos,
+			},
 			Low:        low,
 			High:       high,
 			Statements: statements,
+			Pos:        pos,
 		}
 
 	case token.READ:
-		p.eat(token.READ)
-		statement = ast.ReadStmt{TargetIdentifier: ast.Ident{Id: p.currentToken}}
+		_, identPos := p.eat(token.READ)
+		statement = ast.ReadStmt{
+			TargetIdentifier: ast.Ident{
+				Id:  p.currentToken,
+				Pos: identPos,
+			},
+			Pos: pos,
+		}
 		p.eat(token.IDENT)
 
 	case token.PRINT:
 		p.eat(token.PRINT)
-		statement = ast.PrintStmt{Expression: p.parseExpression()}
+		statement = ast.PrintStmt{
+			Expression: p.parseExpression(),
+			Pos:        pos,
+		}
 
 	case token.ASSERT:
 		p.eat(token.ASSERT)
 		p.eat(token.LPAREN)
-		statement = ast.AssertStmt{Expression: p.parseExpression()}
+		statement = ast.AssertStmt{
+			Expression: p.parseExpression(),
+			Pos:        pos,
+		}
 		p.eat(token.RPAREN)
 
 	default:
@@ -156,6 +188,8 @@ func (p *Parser) parseStatement() ast.Stmt {
 // <expr> ::= <opnd> <op> <opnd>
 //            | [ <unary_opnd> ] <opnd>
 func (p *Parser) parseExpression() ast.Expr {
+	pos := p.currentPos
+
 	if p.currentToken.Type() == token.NOT {
 		unary := p.currentToken
 		p.eat(token.NOT)
@@ -163,6 +197,7 @@ func (p *Parser) parseExpression() ast.Expr {
 		return ast.UnaryExpr{
 			Unary:   unary,
 			Operand: p.parseOperand(),
+			Pos:     pos,
 		}
 	}
 
@@ -195,21 +230,32 @@ func (p *Parser) parseExpression() ast.Expr {
 //
 // <var_ident> ::= <ident>
 func (p *Parser) parseOperand() ast.Node {
+	pos := p.currentPos
+
 	switch p.currentToken.Type() {
 	case token.INTEGER_LITERAL:
 		val := p.currentToken.ValueInt()
 		p.eat(token.INTEGER_LITERAL)
-		return ast.NumberOpnd{Value: val}
+		return ast.NumberOpnd{
+			Value: val,
+			Pos:   pos,
+		}
 
 	case token.STRING_LITERAL:
 		val := p.currentToken.Value()
 		p.eat(token.STRING_LITERAL)
-		return ast.StringOpnd{Value: val}
+		return ast.StringOpnd{
+			Value: val,
+			Pos:   pos,
+		}
 
 	case token.IDENT:
 		t := p.currentToken
 		p.eat(token.IDENT)
-		return ast.Ident{Id: t}
+		return ast.Ident{
+			Id:  t,
+			Pos: pos,
+		}
 
 	case token.LPAREN:
 		p.eat(token.LPAREN)
@@ -264,9 +310,10 @@ func (p *Parser) isOperator(tokenType token.TokenTag) bool {
 
 // eat checks that the given tokenType corresponds to the currently held token
 // and consumes it. If the tokens do not match, eat panics.
-func (p *Parser) eat(tokenType token.TokenTag) {
+func (p *Parser) eat(tokenType token.TokenTag) (token.Token, token.Position) {
 	if p.currentToken.Type() == tokenType {
-		p.currentToken = p.lexer.GetNextToken()
+		p.currentToken, p.currentPos = p.lexer.GetNextToken()
+		return p.currentToken, p.currentPos
 	} else {
 		panic(fmt.Sprintf(
 			"Syntax error: expected %v got %v",

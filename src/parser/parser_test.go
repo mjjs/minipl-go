@@ -10,347 +10,444 @@ import (
 
 var parseTestCases = []struct {
 	name           string
-	lexerOutput    []token.Token
+	lexerOutput    []positionedToken
 	expectedOutput ast.Prog
 	shouldError    bool
 }{
 	{
 		name: "Declaration with assignment",
-		lexerOutput: []token.Token{
-			token.New(token.VAR, ""),
-			token.New(token.IDENT, "x"),
-			token.New(token.COLON, ""),
-			token.New(token.INTEGER, ""),
-			token.New(token.ASSIGN, ""),
-			token.New(token.INTEGER_LITERAL, "5"),
-			token.New(token.SEMI, ""),
+		lexerOutput: []positionedToken{
+			{token.New(token.VAR, ""), token.Position{Line: 1, Column: 1}},
+			{token.New(token.IDENT, "x"), token.Position{Line: 1, Column: 2}},
+			{token.New(token.COLON, ""), token.Position{Line: 1, Column: 3}},
+			{token.New(token.INTEGER, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.ASSIGN, ""), token.Position{Line: 1, Column: 5}},
+			{token.New(token.INTEGER_LITERAL, "5"), token.Position{Line: 1, Column: 6}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 7}},
 		},
-		expectedOutput: ast.Prog{Statements: ast.Stmts{
-			Statements: []ast.Stmt{
-				ast.DeclStmt{
-					Identifier:   token.New(token.IDENT, "x"),
-					VariableType: token.New(token.INTEGER, ""),
-					Expression: ast.NullaryExpr{
-						Operand: ast.NumberOpnd{Value: 5},
+		expectedOutput: ast.Prog{
+			Statements: ast.Stmts{
+				Statements: []ast.Stmt{
+					ast.DeclStmt{
+						Identifier:   token.New(token.IDENT, "x"),
+						VariableType: token.New(token.INTEGER, ""),
+						Expression: ast.NullaryExpr{
+							Operand: ast.NumberOpnd{Value: 5, Pos: token.Position{Line: 1, Column: 6}},
+						},
+						Pos: token.Position{Line: 1, Column: 1},
 					},
 				},
 			},
-		},
 		},
 	},
 	{
 		name: "Declaration without assignment",
-		lexerOutput: []token.Token{
+		lexerOutput: []positionedToken{
 			// Int
-			token.New(token.VAR, ""),
-			token.New(token.IDENT, "x"),
-			token.New(token.COLON, ""),
-			token.New(token.INTEGER, ""),
-			token.New(token.SEMI, ""),
+			{token.New(token.VAR, ""), token.Position{Line: 1, Column: 1}},
+			{token.New(token.IDENT, "x"), token.Position{Line: 1, Column: 2}},
+			{token.New(token.COLON, ""), token.Position{Line: 1, Column: 3}},
+			{token.New(token.INTEGER, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 5}},
 
 			// String
-			token.New(token.VAR, ""),
-			token.New(token.IDENT, "y"),
-			token.New(token.COLON, ""),
-			token.New(token.STRING, ""),
-			token.New(token.SEMI, ""),
+			{token.New(token.VAR, ""), token.Position{Line: 1, Column: 6}},
+			{token.New(token.IDENT, "y"), token.Position{Line: 1, Column: 7}},
+			{token.New(token.COLON, ""), token.Position{Line: 1, Column: 8}},
+			{token.New(token.STRING, ""), token.Position{Line: 1, Column: 9}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 10}},
 
 			// Boolean
-			token.New(token.VAR, ""),
-			token.New(token.IDENT, "z"),
-			token.New(token.COLON, ""),
-			token.New(token.BOOLEAN, ""),
-			token.New(token.SEMI, ""),
+			{token.New(token.VAR, ""), token.Position{Line: 1, Column: 11}},
+			{token.New(token.IDENT, "z"), token.Position{Line: 1, Column: 12}},
+			{token.New(token.COLON, ""), token.Position{Line: 1, Column: 13}},
+			{token.New(token.BOOLEAN, ""), token.Position{Line: 1, Column: 14}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 15}},
 		},
-		expectedOutput: ast.Prog{Statements: ast.Stmts{
-			Statements: []ast.Stmt{
-				ast.DeclStmt{
-					Identifier:   token.New(token.IDENT, "x"),
-					VariableType: token.New(token.INTEGER, ""),
-				},
-				ast.DeclStmt{
-					Identifier:   token.New(token.IDENT, "y"),
-					VariableType: token.New(token.STRING, ""),
-				},
-				ast.DeclStmt{
-					Identifier:   token.New(token.IDENT, "z"),
-					VariableType: token.New(token.BOOLEAN, ""),
+		expectedOutput: ast.Prog{
+			Statements: ast.Stmts{
+				Statements: []ast.Stmt{
+					ast.DeclStmt{
+						Identifier:   token.New(token.IDENT, "x"),
+						VariableType: token.New(token.INTEGER, ""),
+						Pos:          token.Position{Line: 1, Column: 1},
+					},
+					ast.DeclStmt{
+						Identifier:   token.New(token.IDENT, "y"),
+						VariableType: token.New(token.STRING, ""),
+						Pos:          token.Position{Line: 1, Column: 6},
+					},
+					ast.DeclStmt{
+						Identifier:   token.New(token.IDENT, "z"),
+						VariableType: token.New(token.BOOLEAN, ""),
+						Pos:          token.Position{Line: 1, Column: 11},
+					},
 				},
 			},
-		},
 		},
 	},
 	{
 		name: "Assignment",
-		lexerOutput: []token.Token{
-			token.New(token.IDENT, "foo"),
-			token.New(token.ASSIGN, ""),
-			token.New(token.STRING_LITERAL, "bar"),
-			token.New(token.SEMI, ""),
+		lexerOutput: []positionedToken{
+			{token.New(token.IDENT, "foo"), token.Position{Line: 1, Column: 1}},
+			{token.New(token.ASSIGN, ""), token.Position{Line: 1, Column: 2}},
+			{token.New(token.STRING_LITERAL, "bar"), token.Position{Line: 1, Column: 3}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 4}},
 		},
-		expectedOutput: ast.Prog{Statements: ast.Stmts{
-			Statements: []ast.Stmt{
-				ast.AssignStmt{
-					Identifier: ast.Ident{Id: token.New(token.IDENT, "foo")},
-					Expression: ast.NullaryExpr{
-						Operand: ast.StringOpnd{Value: "bar"},
+		expectedOutput: ast.Prog{
+			Statements: ast.Stmts{
+				Statements: []ast.Stmt{
+					ast.AssignStmt{
+						Identifier: ast.Ident{
+							Id:  token.New(token.IDENT, "foo"),
+							Pos: token.Position{Line: 1, Column: 1},
+						},
+						Expression: ast.NullaryExpr{
+							Operand: ast.StringOpnd{
+								Value: "bar",
+								Pos:   token.Position{Line: 1, Column: 3},
+							},
+						},
+						Pos: token.Position{Line: 1, Column: 1},
 					},
 				},
 			},
-		},
 		},
 	},
 	{
 		name: "For statement with multiple inner statements",
-		lexerOutput: []token.Token{
-			token.New(token.FOR, ""),
-			token.New(token.IDENT, "i"),
-			token.New(token.IN, ""),
-			token.New(token.INTEGER_LITERAL, "3"),
-			token.New(token.PLUS, ""),
-			token.New(token.INTEGER_LITERAL, "2"),
-			token.New(token.DOTDOT, ""),
-			token.New(token.INTEGER_LITERAL, "25"),
-			token.New(token.MINUS, ""),
-			token.New(token.INTEGER_LITERAL, "1"),
-			token.New(token.DO, ""),
-			token.New(token.READ, ""),
-			token.New(token.IDENT, "x"),
-			token.New(token.SEMI, ""),
-			token.New(token.PRINT, ""),
-			token.New(token.IDENT, "x"),
-			token.New(token.SEMI, ""),
-			token.New(token.END, ""),
-			token.New(token.FOR, ""),
-			token.New(token.SEMI, ""),
+		lexerOutput: []positionedToken{
+			{token.New(token.FOR, ""), token.Position{Line: 1, Column: 1}},
+			{token.New(token.IDENT, "i"), token.Position{Line: 1, Column: 2}},
+			{token.New(token.IN, ""), token.Position{Line: 1, Column: 3}},
+			{token.New(token.INTEGER_LITERAL, "3"), token.Position{Line: 1, Column: 4}},
+			{token.New(token.PLUS, ""), token.Position{Line: 1, Column: 5}},
+			{token.New(token.INTEGER_LITERAL, "2"), token.Position{Line: 1, Column: 6}},
+			{token.New(token.DOTDOT, ""), token.Position{Line: 1, Column: 7}},
+			{token.New(token.INTEGER_LITERAL, "25"), token.Position{Line: 1, Column: 8}},
+			{token.New(token.MINUS, ""), token.Position{Line: 1, Column: 9}},
+			{token.New(token.INTEGER_LITERAL, "1"), token.Position{Line: 1, Column: 10}},
+			{token.New(token.DO, ""), token.Position{Line: 1, Column: 11}},
+			{token.New(token.READ, ""), token.Position{Line: 1, Column: 12}},
+			{token.New(token.IDENT, "x"), token.Position{Line: 1, Column: 13}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 14}},
+			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 15}},
+			{token.New(token.IDENT, "x"), token.Position{Line: 1, Column: 16}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 17}},
+			{token.New(token.END, ""), token.Position{Line: 1, Column: 18}},
+			{token.New(token.FOR, ""), token.Position{Line: 1, Column: 19}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 20}},
 		},
-		expectedOutput: ast.Prog{Statements: ast.Stmts{
-			Statements: []ast.Stmt{
-				ast.ForStmt{
-					Index: ast.Ident{Id: token.New(token.IDENT, "i")},
-					Low: ast.BinaryExpr{
-						Left:     ast.NumberOpnd{Value: 3},
-						Operator: token.New(token.PLUS, ""),
-						Right:    ast.NumberOpnd{Value: 2},
-					},
-					High: ast.BinaryExpr{
-						Left:     ast.NumberOpnd{Value: 25},
-						Operator: token.New(token.MINUS, ""),
-						Right:    ast.NumberOpnd{Value: 1},
-					},
-					Statements: ast.Stmts{
-						Statements: []ast.Stmt{
-							ast.ReadStmt{TargetIdentifier: ast.Ident{Id: token.New(token.IDENT, "x")}},
-							ast.PrintStmt{
-								Expression: ast.NullaryExpr{
-									Operand: ast.Ident{Id: token.New(token.IDENT, "x")},
+		expectedOutput: ast.Prog{
+			Statements: ast.Stmts{
+				Statements: []ast.Stmt{
+					ast.ForStmt{
+						Index: ast.Ident{
+							Id:  token.New(token.IDENT, "i"),
+							Pos: token.Position{Line: 1, Column: 2},
+						},
+						Low: ast.BinaryExpr{
+							Left: ast.NumberOpnd{
+								Value: 3,
+								Pos:   token.Position{Line: 1, Column: 4},
+							},
+							Operator: token.New(token.PLUS, ""),
+							Right: ast.NumberOpnd{
+								Value: 2,
+								Pos:   token.Position{Line: 1, Column: 6},
+							},
+						},
+						High: ast.BinaryExpr{
+							Left: ast.NumberOpnd{
+								Value: 25,
+								Pos:   token.Position{Line: 1, Column: 8},
+							},
+							Operator: token.New(token.MINUS, ""),
+							Right: ast.NumberOpnd{
+								Value: 1,
+								Pos:   token.Position{Line: 1, Column: 10},
+							},
+						},
+						Statements: ast.Stmts{
+							Statements: []ast.Stmt{
+								ast.ReadStmt{
+									TargetIdentifier: ast.Ident{
+										Id:  token.New(token.IDENT, "x"),
+										Pos: token.Position{Line: 1, Column: 13},
+									},
+									Pos: token.Position{Line: 1, Column: 12},
+								},
+								ast.PrintStmt{
+									Expression: ast.NullaryExpr{
+										Operand: ast.Ident{
+											Id:  token.New(token.IDENT, "x"),
+											Pos: token.Position{Line: 1, Column: 16},
+										},
+									},
+									Pos: token.Position{Line: 1, Column: 15},
 								},
 							},
 						},
+						Pos: token.Position{Line: 1, Column: 1},
 					},
 				},
 			},
-		},
 		},
 	},
 	{
 		name: "Assert statement",
-		lexerOutput: []token.Token{
-			token.New(token.ASSERT, ""),
-			token.New(token.LPAREN, ""),
-			token.New(token.STRING_LITERAL, "foo"),
-			token.New(token.EQ, ""),
-			token.New(token.STRING_LITERAL, "bar"),
-			token.New(token.RPAREN, ""),
-			token.New(token.SEMI, ""),
+		lexerOutput: []positionedToken{
+			{token.New(token.ASSERT, ""), token.Position{Line: 1, Column: 1}},
+			{token.New(token.LPAREN, ""), token.Position{Line: 1, Column: 2}},
+			{token.New(token.STRING_LITERAL, "foo"), token.Position{Line: 1, Column: 3}},
+			{token.New(token.EQ, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.STRING_LITERAL, "bar"), token.Position{Line: 1, Column: 5}},
+			{token.New(token.RPAREN, ""), token.Position{Line: 1, Column: 6}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 7}},
 		},
-		expectedOutput: ast.Prog{Statements: ast.Stmts{
-			Statements: []ast.Stmt{
-				ast.AssertStmt{
-					Expression: ast.BinaryExpr{
-						Left:     ast.StringOpnd{Value: "foo"},
-						Operator: token.New(token.EQ, ""),
-						Right:    ast.StringOpnd{Value: "bar"},
+		expectedOutput: ast.Prog{
+			Statements: ast.Stmts{
+				Statements: []ast.Stmt{
+					ast.AssertStmt{
+						Expression: ast.BinaryExpr{
+							Left: ast.StringOpnd{
+								Value: "foo",
+								Pos:   token.Position{Line: 1, Column: 3},
+							},
+							Operator: token.New(token.EQ, ""),
+							Right: ast.StringOpnd{
+								Value: "bar",
+								Pos:   token.Position{Line: 1, Column: 5},
+							},
+						},
+						Pos: token.Position{Line: 1, Column: 1},
 					},
 				},
 			},
 		},
-		},
 	},
 	{
 		name: "Error if no EOF is returned by lexer when expected",
-		lexerOutput: []token.Token{
-			token.New(token.PRINT, ""),
-			token.New(token.INTEGER_LITERAL, "22"),
-			token.New(token.SEMI, ""),
-			token.New(token.SEMI, ""),
+		lexerOutput: []positionedToken{
+			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 1}},
+			{token.New(token.INTEGER_LITERAL, "22"), token.Position{Line: 1, Column: 2}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 3}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 4}},
 		},
 		shouldError: true,
 	},
 	{
 		name: "Parenthesised expressions",
-		lexerOutput: []token.Token{
+		lexerOutput: []positionedToken{
 			// print (1 * 2) / (4 - 3)
-			token.New(token.PRINT, ""),
+			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 1}},
 
-			token.New(token.LPAREN, ""),
-			token.New(token.INTEGER_LITERAL, "1"),
-			token.New(token.MULTIPLY, ""),
-			token.New(token.INTEGER_LITERAL, "2"),
-			token.New(token.RPAREN, ""),
+			{token.New(token.LPAREN, ""), token.Position{Line: 1, Column: 2}},
+			{token.New(token.INTEGER_LITERAL, "1"), token.Position{Line: 1, Column: 3}},
+			{token.New(token.MULTIPLY, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.INTEGER_LITERAL, "2"), token.Position{Line: 1, Column: 5}},
+			{token.New(token.RPAREN, ""), token.Position{Line: 1, Column: 6}},
 
-			token.New(token.INTEGER_DIV, ""),
+			{token.New(token.INTEGER_DIV, ""), token.Position{Line: 1, Column: 7}},
 
-			token.New(token.LPAREN, ""),
-			token.New(token.INTEGER_LITERAL, "4"),
-			token.New(token.MINUS, ""),
-			token.New(token.INTEGER_LITERAL, "3"),
-			token.New(token.RPAREN, ""),
+			{token.New(token.LPAREN, ""), token.Position{Line: 1, Column: 8}},
+			{token.New(token.INTEGER_LITERAL, "4"), token.Position{Line: 1, Column: 9}},
+			{token.New(token.MINUS, ""), token.Position{Line: 1, Column: 10}},
+			{token.New(token.INTEGER_LITERAL, "3"), token.Position{Line: 1, Column: 11}},
+			{token.New(token.RPAREN, ""), token.Position{Line: 1, Column: 12}},
 
-			token.New(token.SEMI, ""),
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 13}},
 		},
-		expectedOutput: ast.Prog{Statements: ast.Stmts{
-			Statements: []ast.Stmt{
-				ast.PrintStmt{
-					Expression: ast.BinaryExpr{
-						Left: ast.BinaryExpr{
-							Left:     ast.NumberOpnd{Value: 1},
-							Operator: token.New(token.MULTIPLY, ""),
-							Right:    ast.NumberOpnd{Value: 2},
+		expectedOutput: ast.Prog{
+			Statements: ast.Stmts{
+				Statements: []ast.Stmt{
+					ast.PrintStmt{
+						Expression: ast.BinaryExpr{
+							Left: ast.BinaryExpr{
+								Left: ast.NumberOpnd{
+									Value: 1,
+									Pos:   token.Position{Line: 1, Column: 3},
+								},
+								Operator: token.New(token.MULTIPLY, ""),
+								Right: ast.NumberOpnd{
+									Value: 2,
+									Pos:   token.Position{Line: 1, Column: 5},
+								},
+							},
+							Operator: token.New(token.INTEGER_DIV, ""),
+							Right: ast.BinaryExpr{
+								Left: ast.NumberOpnd{
+									Value: 4,
+									Pos:   token.Position{Line: 1, Column: 9},
+								},
+								Operator: token.New(token.MINUS, ""),
+								Right: ast.NumberOpnd{
+									Value: 3,
+									Pos:   token.Position{Line: 1, Column: 11},
+								},
+							},
 						},
-						Operator: token.New(token.INTEGER_DIV, ""),
-						Right: ast.BinaryExpr{
-							Left:     ast.NumberOpnd{Value: 4},
-							Operator: token.New(token.MINUS, ""),
-							Right:    ast.NumberOpnd{Value: 3},
-						},
+						Pos: token.Position{Line: 1, Column: 1},
 					},
 				},
 			},
-		},
 		},
 	},
 	{
 		name: "Less than comparison",
-		lexerOutput: []token.Token{
+		lexerOutput: []positionedToken{
 			// var foo : bool := 3 < 2
-			token.New(token.VAR, ""),
-			token.New(token.IDENT, "foo"),
-			token.New(token.COLON, ""),
-			token.New(token.BOOLEAN, ""),
-			token.New(token.ASSIGN, ""),
-			token.New(token.INTEGER_LITERAL, "3"),
-			token.New(token.LT, ""),
-			token.New(token.INTEGER_LITERAL, "2"),
-			token.New(token.SEMI, ""),
+			{token.New(token.VAR, ""), token.Position{Line: 1, Column: 1}},
+			{token.New(token.IDENT, "foo"), token.Position{Line: 1, Column: 2}},
+			{token.New(token.COLON, ""), token.Position{Line: 1, Column: 3}},
+			{token.New(token.BOOLEAN, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.ASSIGN, ""), token.Position{Line: 1, Column: 5}},
+			{token.New(token.INTEGER_LITERAL, "3"), token.Position{Line: 1, Column: 6}},
+			{token.New(token.LT, ""), token.Position{Line: 1, Column: 7}},
+			{token.New(token.INTEGER_LITERAL, "2"), token.Position{Line: 1, Column: 8}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 9}},
 		},
-		expectedOutput: ast.Prog{Statements: ast.Stmts{
-			Statements: []ast.Stmt{
-				ast.DeclStmt{
-					Identifier:   token.New(token.IDENT, "foo"),
-					VariableType: token.New(token.BOOLEAN, ""),
-					Expression: ast.BinaryExpr{
-						Left:     ast.NumberOpnd{Value: 3},
-						Operator: token.New(token.LT, ""),
-						Right:    ast.NumberOpnd{Value: 2},
+		expectedOutput: ast.Prog{
+			Statements: ast.Stmts{
+				Statements: []ast.Stmt{
+					ast.DeclStmt{
+						Identifier:   token.New(token.IDENT, "foo"),
+						VariableType: token.New(token.BOOLEAN, ""),
+						Expression: ast.BinaryExpr{
+							Left: ast.NumberOpnd{
+								Value: 3,
+								Pos:   token.Position{Line: 1, Column: 6},
+							},
+							Operator: token.New(token.LT, ""),
+							Right: ast.NumberOpnd{
+								Value: 2,
+								Pos:   token.Position{Line: 1, Column: 8},
+							},
+						},
+						Pos: token.Position{Line: 1, Column: 1},
 					},
 				},
 			},
-		},
 		},
 	},
 	{
 		name: "Nested logical and operator with not",
-		lexerOutput: []token.Token{
+		lexerOutput: []positionedToken{
 			// var foo : bool := ((3 = 3) & (2 = 2)) & (1 = 0);
-			token.New(token.VAR, ""),
-			token.New(token.IDENT, "foo"),
-			token.New(token.COLON, ""),
-			token.New(token.BOOLEAN, ""),
-			token.New(token.ASSIGN, ""),
+			{token.New(token.VAR, ""), token.Position{Line: 1, Column: 1}},
+			{token.New(token.IDENT, "foo"), token.Position{Line: 1, Column: 2}},
+			{token.New(token.COLON, ""), token.Position{Line: 1, Column: 3}},
+			{token.New(token.BOOLEAN, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.ASSIGN, ""), token.Position{Line: 1, Column: 5}},
 
-			token.New(token.LPAREN, ""),
+			{token.New(token.LPAREN, ""), token.Position{Line: 1, Column: 6}},
 
-			token.New(token.LPAREN, ""),
-			token.New(token.INTEGER_LITERAL, "3"),
-			token.New(token.EQ, ""),
-			token.New(token.INTEGER_LITERAL, "3"),
-			token.New(token.RPAREN, ""),
+			{token.New(token.LPAREN, ""), token.Position{Line: 1, Column: 7}},
+			{token.New(token.INTEGER_LITERAL, "3"), token.Position{Line: 1, Column: 8}},
+			{token.New(token.EQ, ""), token.Position{Line: 1, Column: 9}},
+			{token.New(token.INTEGER_LITERAL, "3"), token.Position{Line: 1, Column: 10}},
+			{token.New(token.RPAREN, ""), token.Position{Line: 1, Column: 11}},
 
-			token.New(token.AND, ""),
+			{token.New(token.AND, ""), token.Position{Line: 1, Column: 12}},
 
-			token.New(token.LPAREN, ""),
-			token.New(token.INTEGER_LITERAL, "2"),
-			token.New(token.EQ, ""),
-			token.New(token.INTEGER_LITERAL, "2"),
-			token.New(token.RPAREN, ""),
+			{token.New(token.LPAREN, ""), token.Position{Line: 1, Column: 13}},
+			{token.New(token.INTEGER_LITERAL, "2"), token.Position{Line: 1, Column: 14}},
+			{token.New(token.EQ, ""), token.Position{Line: 1, Column: 15}},
+			{token.New(token.INTEGER_LITERAL, "2"), token.Position{Line: 1, Column: 16}},
+			{token.New(token.RPAREN, ""), token.Position{Line: 1, Column: 17}},
 
-			token.New(token.RPAREN, ""),
+			{token.New(token.RPAREN, ""), token.Position{Line: 1, Column: 18}},
 
-			token.New(token.AND, ""),
+			{token.New(token.AND, ""), token.Position{Line: 1, Column: 19}},
 
-			token.New(token.LPAREN, ""),
-			token.New(token.INTEGER_LITERAL, "1"),
-			token.New(token.EQ, ""),
-			token.New(token.INTEGER_LITERAL, "0"),
-			token.New(token.RPAREN, ""),
+			{token.New(token.LPAREN, ""), token.Position{Line: 1, Column: 20}},
+			{token.New(token.INTEGER_LITERAL, "1"), token.Position{Line: 1, Column: 21}},
+			{token.New(token.EQ, ""), token.Position{Line: 1, Column: 22}},
+			{token.New(token.INTEGER_LITERAL, "0"), token.Position{Line: 1, Column: 23}},
+			{token.New(token.RPAREN, ""), token.Position{Line: 1, Column: 24}},
 
-			token.New(token.SEMI, ""),
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 25}},
 		},
-		expectedOutput: ast.Prog{Statements: ast.Stmts{
-			Statements: []ast.Stmt{
-				ast.DeclStmt{
-					Identifier:   token.New(token.IDENT, "foo"),
-					VariableType: token.New(token.BOOLEAN, ""),
-					Expression: ast.BinaryExpr{
-						Left: ast.BinaryExpr{
+		expectedOutput: ast.Prog{
+			Statements: ast.Stmts{
+				Statements: []ast.Stmt{
+					ast.DeclStmt{
+						Identifier:   token.New(token.IDENT, "foo"),
+						VariableType: token.New(token.BOOLEAN, ""),
+						Expression: ast.BinaryExpr{
 							Left: ast.BinaryExpr{
-								Left:     ast.NumberOpnd{Value: 3},
-								Operator: token.New(token.EQ, ""),
-								Right:    ast.NumberOpnd{Value: 3},
+								Left: ast.BinaryExpr{
+									Left: ast.NumberOpnd{
+										Value: 3,
+										Pos:   token.Position{Line: 1, Column: 8},
+									},
+									Operator: token.New(token.EQ, ""),
+									Right: ast.NumberOpnd{
+										Value: 3,
+										Pos:   token.Position{Line: 1, Column: 10},
+									},
+								},
+								Operator: token.New(token.AND, ""),
+								Right: ast.BinaryExpr{
+									Left: ast.NumberOpnd{
+										Value: 2,
+										Pos:   token.Position{Line: 1, Column: 14},
+									},
+									Operator: token.New(token.EQ, ""),
+									Right: ast.NumberOpnd{
+										Value: 2,
+										Pos:   token.Position{Line: 1, Column: 16},
+									},
+								},
 							},
 							Operator: token.New(token.AND, ""),
 							Right: ast.BinaryExpr{
-								Left:     ast.NumberOpnd{Value: 2},
+								Left: ast.NumberOpnd{
+									Value: 1,
+									Pos:   token.Position{Line: 1, Column: 21},
+								},
 								Operator: token.New(token.EQ, ""),
-								Right:    ast.NumberOpnd{Value: 2},
+								Right: ast.NumberOpnd{
+									Value: 0,
+									Pos:   token.Position{Line: 1, Column: 23},
+								},
 							},
 						},
-						Operator: token.New(token.AND, ""),
-						Right: ast.BinaryExpr{
-							Left:     ast.NumberOpnd{Value: 1},
-							Operator: token.New(token.EQ, ""),
-							Right:    ast.NumberOpnd{Value: 0},
-						},
+						Pos: token.Position{Line: 1, Column: 1},
 					},
 				},
 			},
-		},
 		},
 	},
 	{
 		name: "Logical not",
-		lexerOutput: []token.Token{
+		lexerOutput: []positionedToken{
 			// print !(notTrue);
-			token.New(token.PRINT, ""),
-			token.New(token.NOT, ""),
-			token.New(token.LPAREN, ""),
-			token.New(token.IDENT, "notTrue"),
-			token.New(token.RPAREN, ""),
-			token.New(token.SEMI, ""),
+			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 1}},
+			{token.New(token.NOT, ""), token.Position{Line: 1, Column: 2}},
+			{token.New(token.LPAREN, ""), token.Position{Line: 1, Column: 3}},
+			{token.New(token.IDENT, "notTrue"), token.Position{Line: 1, Column: 4}},
+			{token.New(token.RPAREN, ""), token.Position{Line: 1, Column: 5}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 6}},
 		},
-		expectedOutput: ast.Prog{Statements: ast.Stmts{
-			Statements: []ast.Stmt{
-				ast.PrintStmt{
-					Expression: ast.UnaryExpr{
-						Unary: token.New(token.NOT, ""),
-						Operand: ast.NullaryExpr{
-							Operand: ast.Ident{Id: token.New(token.IDENT, "notTrue")},
+		expectedOutput: ast.Prog{
+			Statements: ast.Stmts{
+				Statements: []ast.Stmt{
+					ast.PrintStmt{
+						Expression: ast.UnaryExpr{
+							Unary: token.New(token.NOT, ""),
+							Operand: ast.NullaryExpr{
+								Operand: ast.Ident{
+									Id:  token.New(token.IDENT, "notTrue"),
+									Pos: token.Position{Line: 1, Column: 4},
+								},
+							},
+							Pos: token.Position{Line: 1, Column: 2},
 						},
+						Pos: token.Position{Line: 1, Column: 1},
 					},
 				},
 			},
-		},
 		},
 	},
 }
@@ -359,7 +456,7 @@ func TestParse(t *testing.T) {
 	for _, testCase := range parseTestCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			parser := New(newMockLexer(
-				testCase.lexerOutput...,
+				testCase.lexerOutput,
 			))
 
 			actual, err := parser.Parse()
@@ -377,20 +474,37 @@ func TestParse(t *testing.T) {
 }
 
 type mockLexer struct {
-	tokens []token.Token
-	pos    int
+	tokens    []token.Token
+	positions []token.Position
+	pos       int
 }
 
-func newMockLexer(tokens ...token.Token) *mockLexer {
-	return &mockLexer{tokens: tokens}
+// Helper struct for simpler test case construction
+type positionedToken struct {
+	token token.Token
+	pos   token.Position
 }
 
-func (m *mockLexer) GetNextToken() token.Token {
+func newMockLexer(output []positionedToken) *mockLexer {
+	tokens := []token.Token{}
+	positions := []token.Position{}
+
+	for _, x := range output {
+		tokens = append(tokens, x.token)
+		positions = append(positions, x.pos)
+	}
+
+	return &mockLexer{tokens: tokens, positions: positions}
+}
+
+func (m *mockLexer) GetNextToken() (token.Token, token.Position) {
 	if m.pos > len(m.tokens)-1 {
-		return token.New(token.EOF, "")
+		return token.New(token.EOF, ""), token.Position{Line: 99, Column: 99}
 	}
 
 	token := m.tokens[m.pos]
+	pos := m.positions[m.pos]
 	m.pos++
-	return token
+
+	return token, pos
 }
