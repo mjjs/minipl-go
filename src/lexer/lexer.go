@@ -54,58 +54,49 @@ func New(sourceCode string) *Lexer {
 // sourceCode given during initialization.
 func (l *Lexer) GetNextToken() (token.Token, token.Position) {
 	for !l.eof {
+		pos := l.tokenPos
+
 		if unicode.IsSpace(l.currentChar) {
 			l.skipWhitespace()
 			continue
 		}
 
 		if unicode.IsLetter(l.currentChar) {
-			pos := l.tokenPos
-			return l.ident(), pos
+			return l.ident()
 		}
 
 		if unicode.IsNumber(l.currentChar) {
-			pos := l.tokenPos
-			return l.number(), pos
+			return l.number()
 		}
 
 		if l.currentChar == '/' {
 			next, eof := l.peek()
 			if !eof && next == '/' {
-				l.advance()
-				l.advance()
 				l.skipLineComment()
 				continue
 			}
 
 			if !eof && next == '*' {
-				l.advance()
-				l.advance()
 				l.skipBlockComment()
 				continue
 			}
 
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.INTEGER_DIV, ""), pos
 		}
 
 		if l.currentChar == '"' {
-			pos := l.tokenPos
-			l.advance()
-			return l.string(), pos
+			return l.string()
 		}
 
 		if l.currentChar == ':' {
 			next, eof := l.peek()
 			if !eof && next == '=' {
-				pos := l.tokenPos
 				l.advance()
 				l.advance()
 				return token.New(token.ASSIGN, ""), pos
 			}
 
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.COLON, ""), pos
 		}
@@ -113,7 +104,6 @@ func (l *Lexer) GetNextToken() (token.Token, token.Position) {
 		if l.currentChar == '.' {
 			next, eof := l.peek()
 			if !eof && next == '.' {
-				pos := l.tokenPos
 				l.advance()
 				l.advance()
 				return token.New(token.DOTDOT, ""), pos
@@ -121,61 +111,51 @@ func (l *Lexer) GetNextToken() (token.Token, token.Position) {
 		}
 
 		if l.currentChar == ';' {
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.SEMI, ""), pos
 		}
 
 		if l.currentChar == '!' {
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.NOT, ""), pos
 		}
 
 		if l.currentChar == '+' {
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.PLUS, ""), pos
 		}
 
 		if l.currentChar == '-' {
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.MINUS, ""), pos
 		}
 
 		if l.currentChar == '*' {
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.MULTIPLY, ""), pos
 		}
 
 		if l.currentChar == '<' {
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.LT, ""), pos
 		}
 
 		if l.currentChar == '=' {
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.EQ, ""), pos
 		}
 
 		if l.currentChar == '&' {
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.AND, ""), pos
 		}
 
 		if l.currentChar == '(' {
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.LPAREN, ""), pos
 		}
 
 		if l.currentChar == ')' {
-			pos := l.tokenPos
 			l.advance()
 			return token.New(token.RPAREN, ""), pos
 		}
@@ -183,7 +163,7 @@ func (l *Lexer) GetNextToken() (token.Token, token.Position) {
 		errorToken := token.New(token.ERROR,
 			fmt.Sprintf("unrecognized character '%c'", l.currentChar))
 
-		return errorToken, l.tokenPos
+		return errorToken, pos
 	}
 
 	return token.New(token.EOF, ""), l.tokenPos
@@ -228,6 +208,9 @@ func (l *Lexer) skipWhitespace() {
 
 // skipLineComment advances the lexer until the end of a line.
 func (l *Lexer) skipLineComment() {
+	l.advance()
+	l.advance()
+
 	for !l.eof && l.currentChar != '\n' {
 		l.advance()
 	}
@@ -238,6 +221,9 @@ func (l *Lexer) skipLineComment() {
 // skipBlockComment advances the lexer until it has skipped all the characters
 // inside a block comment.
 func (l *Lexer) skipBlockComment() {
+	l.advance()
+	l.advance()
+
 	for !l.eof {
 		if l.currentChar != '*' {
 			l.advance()
@@ -258,7 +244,9 @@ func (l *Lexer) skipBlockComment() {
 
 // ident reads a A-Za-z0-9_ string from the input program and returns an IDENT
 // token with the read string as a lexeme.
-func (l *Lexer) ident() token.Token {
+func (l *Lexer) ident() (token.Token, token.Position) {
+	pos := l.tokenPos
+
 	id := ""
 
 	// TODO: Check if unicode.X is allowed
@@ -269,16 +257,17 @@ func (l *Lexer) ident() token.Token {
 
 	t, ok := reservedKeywords[id]
 	if ok {
-		return t
+		return t, pos
 	}
 
-	return token.New(token.IDENT, id)
+	return token.New(token.IDENT, id), pos
 }
 
 // number reads a number from the input program and returns an INTEGER_LITERAL
 // token with the number as a lexeme. MiniPL only supports integers, so we
 // do not consider floating point numbers.
-func (l *Lexer) number() token.Token {
+func (l *Lexer) number() (token.Token, token.Position) {
+	pos := l.tokenPos
 	numString := ""
 
 	for !l.eof && unicode.IsNumber(l.currentChar) {
@@ -286,13 +275,16 @@ func (l *Lexer) number() token.Token {
 		l.advance()
 	}
 
-	return token.New(token.INTEGER_LITERAL, numString)
+	return token.New(token.INTEGER_LITERAL, numString), pos
 }
 
 // string reads a string from the input program and returns a STRING_LITERAL
 // token containing the read string as a lexeme.
-func (l *Lexer) string() token.Token {
+func (l *Lexer) string() (token.Token, token.Position) {
+	pos := l.tokenPos
 	str := ""
+
+	l.advance()
 
 	for !l.eof {
 		if l.currentChar == '\\' {
@@ -319,15 +311,17 @@ func (l *Lexer) string() token.Token {
 		}
 
 		if l.currentChar == '\n' || l.currentChar == '\r' {
-			return token.New(
+			tok := token.New(
 				token.ERROR,
 				fmt.Sprintf("unterminated string literal %s", str),
 			)
+
+			return tok, pos
 		}
 
 		str += string(l.currentChar)
 		l.advance()
 	}
 
-	return token.New(token.STRING_LITERAL, str)
+	return token.New(token.STRING_LITERAL, str), pos
 }
