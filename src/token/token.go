@@ -47,6 +47,8 @@ const (
 	PRINT  = "PRINT"
 
 	EOF = "EOF"
+
+	ERROR = "ERROR" // For reporting invalid tokens
 )
 
 // Token represents a single token found in the program by scanning it.

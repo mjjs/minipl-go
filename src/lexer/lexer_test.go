@@ -11,7 +11,6 @@ var getNextTokenTestCases = []struct {
 	input             string
 	expectedTokens    []token.Token
 	expectedPositions []token.Position
-	shouldPanic       bool
 }{
 	{
 		name:              "Empty input returns EOF token",
@@ -44,11 +43,6 @@ var getNextTokenTestCases = []struct {
 		expectedPositions: []token.Position{{Line: 1, Column: 1}},
 	},
 	{
-		name:        "Integer starting with zero",
-		input:       "0123",
-		shouldPanic: true,
-	},
-	{
 		name:              "Integer with only zero",
 		input:             "0",
 		expectedTokens:    []token.Token{token.New(token.INTEGER_LITERAL, "0")},
@@ -61,14 +55,16 @@ var getNextTokenTestCases = []struct {
 		expectedPositions: []token.Position{{Line: 1, Column: 1}},
 	},
 	{
-		name:        "Unterminated string literal 1",
-		input:       "\"Tännhauser gate\n\"",
-		shouldPanic: true,
+		name:              "Unterminated string literal 1",
+		input:             "\"Tännhauser gate\n\"",
+		expectedTokens:    []token.Token{token.New(token.ERROR, "unterminated string literal Tännhauser gate")},
+		expectedPositions: []token.Position{{Line: 1, Column: 1}},
 	},
 	{
-		name:        "Unterminated string literal 2",
-		input:       "\"Tännhauser gate\r\"",
-		shouldPanic: true,
+		name:              "Unterminated string literal 2",
+		input:             "\"Tännhauser gate\r\"",
+		expectedTokens:    []token.Token{token.New(token.ERROR, "unterminated string literal Tännhauser gate")},
+		expectedPositions: []token.Position{{Line: 1, Column: 1}},
 	},
 	{
 		name:  "String literal with escaped characters",
@@ -95,9 +91,10 @@ var getNextTokenTestCases = []struct {
 		expectedPositions: []token.Position{{Line: 1, Column: 1}},
 	},
 	{
-		name:        "Unsupported character",
-		input:       `🦊`,
-		shouldPanic: true,
+		name:              "Unsupported character",
+		input:             `🦊`,
+		expectedTokens:    []token.Token{token.New(token.ERROR, "unrecognized character '🦊'")},
+		expectedPositions: []token.Position{{Line: 1, Column: 1}},
 	},
 	{
 		name:  "Single ID",
@@ -449,20 +446,7 @@ var getNextTokenTestCases = []struct {
 func TestGetNextToken(t *testing.T) {
 	for _, testCase := range getNextTokenTestCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r == nil && testCase.shouldPanic {
-					t.Error("Expected a panic")
-				} else if r != nil && !testCase.shouldPanic {
-					t.Errorf("Did not expect a panic, got '%v'", r)
-				}
-			}()
-
 			lexer := New(testCase.input)
-
-			if len(testCase.expectedTokens) == 0 {
-				for tok, _ := lexer.GetNextToken(); tok != token.New(token.EOF, ""); {
-				}
-			}
 
 			for i, expectedToken := range testCase.expectedTokens {
 				actualToken, actualPos := lexer.GetNextToken()
