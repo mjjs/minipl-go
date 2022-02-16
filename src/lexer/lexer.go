@@ -77,7 +77,11 @@ func (l *Lexer) GetNextToken() (token.Token, token.Position) {
 			}
 
 			if !eof && next == '*' {
-				l.skipBlockComment()
+				tok, pos := l.skipBlockComment()
+				if tok != nil {
+					return *tok, pos
+				}
+
 				continue
 			}
 
@@ -222,7 +226,9 @@ func (l *Lexer) skipLineComment() {
 
 // skipBlockComment advances the lexer until it has skipped all the characters
 // inside a block comment.
-func (l *Lexer) skipBlockComment() {
+// Returns a non-nil Error token if the block comment is unterminated.
+func (l *Lexer) skipBlockComment() (*token.Token, token.Position) {
+	pos := l.tokenPos
 	l.advance()
 	l.advance()
 
@@ -237,11 +243,15 @@ func (l *Lexer) skipBlockComment() {
 		if !eof && next == '/' {
 			l.advance()
 			l.advance()
-			return
+			return nil, pos
 		} else if !eof {
 			l.advance()
 		}
 	}
+
+	tok := token.New(token.ERROR, "Unterminated block comment")
+
+	return &tok, pos
 }
 
 // ident reads a A-Za-z0-9_ string from the input program and returns an IDENT

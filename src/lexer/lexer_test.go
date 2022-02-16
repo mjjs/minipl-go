@@ -447,6 +447,16 @@ var getNextTokenTestCases = []struct {
 			{Line: 4, Column: 1},
 		},
 	},
+	{
+		name:  "Unterminated block comment",
+		input: "/* this is a comment",
+		expectedTokens: []token.Token{
+			token.New(token.ERROR, "Unterminated block comment"),
+		},
+		expectedPositions: []token.Position{
+			{Line: 1, Column: 1},
+		},
+	},
 }
 
 func TestGetNextToken(t *testing.T) {
