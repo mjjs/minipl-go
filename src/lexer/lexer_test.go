@@ -55,15 +55,21 @@ var getNextTokenTestCases = []struct {
 		expectedPositions: []token.Position{{Line: 1, Column: 1}},
 	},
 	{
-		name:              "Unterminated string literal 1",
-		input:             "\"Tännhauser gate\n\"",
-		expectedTokens:    []token.Token{token.New(token.ERROR, "unterminated string literal Tännhauser gate")},
-		expectedPositions: []token.Position{{Line: 1, Column: 1}},
+		name:  "Unterminated string literal 1",
+		input: "\"Tännhauser gate\n\"",
+		expectedTokens: []token.Token{
+			token.New(token.ERROR, "unterminated string literal Tännhauser gate"),
+			token.New(token.ERROR, "unterminated string literal "),
+		},
+		expectedPositions: []token.Position{
+			{Line: 1, Column: 1},
+			{Line: 2, Column: 1},
+		},
 	},
 	{
 		name:              "Unterminated string literal 2",
-		input:             "\"Tännhauser gate\r\"",
-		expectedTokens:    []token.Token{token.New(token.ERROR, "unterminated string literal Tännhauser gate")},
+		input:             "\"Nostromo",
+		expectedTokens:    []token.Token{token.New(token.ERROR, "unterminated string literal Nostromo")},
 		expectedPositions: []token.Position{{Line: 1, Column: 1}},
 	},
 	{
@@ -92,7 +98,7 @@ var getNextTokenTestCases = []struct {
 	},
 	{
 		name:              "Unsupported character",
-		input:             `🦊`,
+		input:             "🦊",
 		expectedTokens:    []token.Token{token.New(token.ERROR, "unrecognized character '🦊'")},
 		expectedPositions: []token.Position{{Line: 1, Column: 1}},
 	},
@@ -458,6 +464,10 @@ func TestGetNextToken(t *testing.T) {
 				if expectedPos := testCase.expectedPositions[i]; actualPos != expectedPos {
 					t.Errorf("Expected %v, got %v", expectedPos, actualPos)
 				}
+			}
+
+			if tok, _ := lexer.GetNextToken(); tok.Type() != token.EOF {
+				t.Errorf("Expected EOF, got %v", tok)
 			}
 		})
 	}

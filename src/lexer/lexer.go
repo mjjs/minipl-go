@@ -160,6 +160,8 @@ func (l *Lexer) GetNextToken() (token.Token, token.Position) {
 			return token.New(token.RPAREN, ""), pos
 		}
 
+		l.advance()
+
 		errorToken := token.New(token.ERROR,
 			fmt.Sprintf("unrecognized character '%c'", l.currentChar))
 
@@ -307,21 +309,22 @@ func (l *Lexer) string() (token.Token, token.Position) {
 
 		if l.currentChar == '"' {
 			l.advance()
-			break
+			return token.New(token.STRING_LITERAL, str), pos
 		}
 
 		if l.currentChar == '\n' || l.currentChar == '\r' {
-			tok := token.New(
-				token.ERROR,
-				fmt.Sprintf("unterminated string literal %s", str),
-			)
-
-			return tok, pos
+			break
 		}
 
 		str += string(l.currentChar)
 		l.advance()
 	}
 
-	return token.New(token.STRING_LITERAL, str), pos
+	tok := token.New(
+		token.ERROR,
+		fmt.Sprintf("unterminated string literal %s", str),
+	)
+
+	return tok, pos
+
 }
