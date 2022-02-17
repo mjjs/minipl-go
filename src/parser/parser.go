@@ -58,7 +58,7 @@ func (p *Parser) parseStatements() ast.Stmts {
 
 	statements = append(statements, p.parseStatement())
 
-	for p.isStatement(p.currentToken.Type()) {
+	for p.currentToken.IsStatement() {
 		statements = append(statements, p.parseStatement())
 	}
 
@@ -234,7 +234,7 @@ func (p *Parser) parseExpression() ast.Expr {
 
 	left := p.parseOperand()
 
-	if !p.isOperator(p.currentToken.Type()) {
+	if !p.currentToken.IsOperator() {
 		return ast.NullaryExpr{
 			Operand: left,
 		}
@@ -298,47 +298,6 @@ func (p *Parser) parseOperand() ast.Node {
 	panic(fmt.Sprintf("Syntax error: unexpected %v", p.currentToken.Type()))
 }
 
-// isStatement checks whether tokenType should be parsed as a statement node or not.
-func (p *Parser) isStatement(tokenType token.TokenTag) bool {
-	statementTypes := []token.TokenTag{
-		token.VAR,
-		token.IDENT,
-		token.FOR,
-		token.READ,
-		token.PRINT,
-		token.ASSERT,
-	}
-
-	for _, t := range statementTypes {
-		if t == tokenType {
-			return true
-		}
-	}
-
-	return false
-}
-
-// isOperator checks whether tokenType is a valid operator or not.
-func (p *Parser) isOperator(tokenType token.TokenTag) bool {
-	operatorTypes := []token.TokenTag{
-		token.PLUS,
-		token.MINUS,
-		token.MULTIPLY,
-		token.INTEGER_DIV,
-		token.LT,
-		token.EQ,
-		token.AND,
-	}
-
-	for _, t := range operatorTypes {
-		if t == tokenType {
-			return true
-		}
-	}
-
-	return false
-}
-
 // eat checks that the given tokenType corresponds to the currently held token
 // and consumes it. If the tokens do not match, eat panics.
 func (p *Parser) eat(tokenType token.TokenTag) (token.Token, token.Position) {
@@ -357,40 +316,24 @@ func (p *Parser) eat(tokenType token.TokenTag) (token.Token, token.Position) {
 // eatType consumes a type token. If the current token is not a type token,
 // eatType panics.
 func (p *Parser) eatType() {
-	if p.currentToken.Type() == token.INTEGER {
-		p.eat(token.INTEGER)
-	} else if p.currentToken.Type() == token.STRING {
-		p.eat(token.STRING)
-	} else if p.currentToken.Type() == token.BOOLEAN {
-		p.eat(token.BOOLEAN)
-	} else {
+	if !p.currentToken.IsType() {
 		panic(fmt.Sprintf(
 			"Syntax error: expected a type, got %v",
 			p.currentToken.Type(),
 		))
 	}
+
+	p.eat(p.currentToken.Type())
 }
 
 // eatOperator consumes an operator token or panics.
 func (p *Parser) eatOperator() {
-	if p.currentToken.Type() == token.PLUS {
-		p.eat(token.PLUS)
-	} else if p.currentToken.Type() == token.MINUS {
-		p.eat(token.MINUS)
-	} else if p.currentToken.Type() == token.MULTIPLY {
-		p.eat(token.MULTIPLY)
-	} else if p.currentToken.Type() == token.INTEGER_DIV {
-		p.eat(token.INTEGER_DIV)
-	} else if p.currentToken.Type() == token.LT {
-		p.eat(token.LT)
-	} else if p.currentToken.Type() == token.EQ {
-		p.eat(token.EQ)
-	} else if p.currentToken.Type() == token.AND {
-		p.eat(token.AND)
-	} else {
+	if !p.currentToken.IsOperator() {
 		panic(fmt.Sprintf(
 			"Syntax error: expected an operator, got %v",
 			p.currentToken.Type(),
 		))
 	}
+
+	p.eat(p.currentToken.Type())
 }

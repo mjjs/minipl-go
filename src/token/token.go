@@ -1,6 +1,8 @@
 package token
 
-import "strconv"
+import (
+	"strconv"
+)
 
 type TokenTag string
 
@@ -99,3 +101,27 @@ func (t Token) Value() string {
 
 // Type returns the tag of the token.
 func (t Token) Type() TokenTag { return t.tag }
+
+func (t Token) IsOperator() bool {
+	operators := []TokenTag{PLUS, MINUS, MULTIPLY, INTEGER_DIV, LT, EQ, AND}
+	for _, op := range operators {
+		if t.tag == op {
+			return true
+		}
+	}
+	return false
+}
+
+func (t Token) IsType() bool {
+	return t.tag == INTEGER || t.tag == STRING || t.tag == BOOLEAN
+}
+
+func (t Token) IsStatement() bool {
+	statements := []TokenTag{VAR, IDENT, FOR, READ, PRINT, ASSERT}
+	for _, s := range statements {
+		if t.tag == s {
+			return true
+		}
+	}
+	return false
+}
