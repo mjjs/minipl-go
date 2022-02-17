@@ -77,108 +77,139 @@ func (p *Parser) parseStatements() ast.Stmts {
 func (p *Parser) parseStatement() ast.Stmt {
 	var statement ast.Stmt
 
-	pos := p.currentPos
-
 	switch p.currentToken.Type() {
 	case token.VAR:
-		p.eat(token.VAR)
-		ident := p.currentToken
-		p.eat(token.IDENT)
-		p.eat(token.COLON)
-		variableType := p.currentToken
-		p.eatType()
-		if p.currentToken.Type() != token.ASSIGN {
-			statement = ast.DeclStmt{
-				Identifier:   ident,
-				VariableType: variableType,
-				Pos:          pos,
-			}
-
-			break
-		}
-
-		p.eat(token.ASSIGN)
-		expr := p.parseExpression()
-
-		statement = ast.DeclStmt{
-			Identifier:   ident,
-			VariableType: variableType,
-			Expression:   expr,
-			Pos:          pos,
-		}
-
+		statement = p.parseDeclaration()
 	case token.IDENT:
-		ident := p.currentToken
-
-		p.eat(token.IDENT)
-		p.eat(token.ASSIGN)
-		expr := p.parseExpression()
-
-		statement = ast.AssignStmt{
-			Identifier: ast.Ident{
-				Id:  ident,
-				Pos: pos,
-			},
-			Expression: expr,
-			Pos:        pos,
-		}
-
+		statement = p.parseAssignment()
 	case token.FOR:
-		p.eat(token.FOR)
-		ident := p.currentToken
-		identPos := p.currentPos
-		p.eat(token.IDENT)
-		p.eat(token.IN)
-		low := p.parseExpression()
-		p.eat(token.DOTDOT)
-		high := p.parseExpression()
-		p.eat(token.DO)
-		statements := p.parseStatements()
-		p.eat(token.END)
-		p.eat(token.FOR)
-		statement = ast.ForStmt{
-			Index: ast.Ident{
-				Id:  ident,
-				Pos: identPos,
-			},
-			Low:        low,
-			High:       high,
-			Statements: statements,
-			Pos:        pos,
-		}
-
+		statement = p.parseForStatement()
 	case token.READ:
-		_, identPos := p.eat(token.READ)
-		statement = ast.ReadStmt{
-			TargetIdentifier: ast.Ident{
-				Id:  p.currentToken,
-				Pos: identPos,
-			},
-			Pos: pos,
-		}
-		p.eat(token.IDENT)
-
+		statement = p.parseReadStatement()
 	case token.PRINT:
-		p.eat(token.PRINT)
-		statement = ast.PrintStmt{
-			Expression: p.parseExpression(),
-			Pos:        pos,
-		}
-
+		statement = p.parsePrintStatement()
 	case token.ASSERT:
-		p.eat(token.ASSERT)
-		p.eat(token.LPAREN)
-		statement = ast.AssertStmt{
-			Expression: p.parseExpression(),
-			Pos:        pos,
-		}
-		p.eat(token.RPAREN)
+		statement = p.parseAssertStatement()
 
 	default:
-		panic("Parse error")
+		panic(fmt.Sprintf("%s: syntax error: unexpected %v", p.currentPos, p.currentToken.Type()))
 	}
 
 	p.eat(token.SEMI)
+
+	return statement
+}
+
+func (p *Parser) parseDeclaration() ast.DeclStmt {
+	pos := p.currentPos
+
+	p.eat(token.VAR)
+	ident := p.currentToken
+	p.eat(token.IDENT)
+	p.eat(token.COLON)
+	variableType := p.currentToken
+	p.eatType()
+	if p.currentToken.Type() != token.ASSIGN {
+		return ast.DeclStmt{
+			Identifier:   ident,
+			VariableType: variableType,
+			Pos:          pos,
+		}
+	}
+
+	p.eat(token.ASSIGN)
+	expr := p.parseExpression()
+
+	return ast.DeclStmt{
+		Identifier:   ident,
+		VariableType: variableType,
+		Expression:   expr,
+		Pos:          pos,
+	}
+}
+
+func (p *Parser) parseAssignment() ast.AssignStmt {
+	pos := p.currentPos
+
+	ident := p.currentToken
+
+	p.eat(token.IDENT)
+	p.eat(token.ASSIGN)
+	expr := p.parseExpression()
+
+	return ast.AssignStmt{
+		Identifier: ast.Ident{
+			Id:  ident,
+			Pos: pos,
+		},
+		Expression: expr,
+		Pos:        pos,
+	}
+}
+
+func (p *Parser) parseForStatement() ast.ForStmt {
+	pos := p.currentPos
+	p.eat(token.FOR)
+	ident := p.currentToken
+	identPos := p.currentPos
+	p.eat(token.IDENT)
+	p.eat(token.IN)
+	low := p.parseExpression()
+	p.eat(token.DOTDOT)
+	high := p.parseExpression()
+	p.eat(token.DO)
+	statements := p.parseStatements()
+	p.eat(token.END)
+	p.eat(token.FOR)
+	return ast.ForStmt{
+		Index: ast.Ident{
+			Id:  ident,
+			Pos: identPos,
+		},
+		Low:        low,
+		High:       high,
+		Statements: statements,
+		Pos:        pos,
+	}
+}
+
+func (p *Parser) parseReadStatement() ast.ReadStmt {
+	pos := p.currentPos
+	_, identPos := p.eat(token.READ)
+
+	statement := ast.ReadStmt{
+		TargetIdentifier: ast.Ident{
+			Id:  p.currentToken,
+			Pos: identPos,
+		},
+		Pos: pos,
+	}
+
+	p.eat(token.IDENT)
+
+	return statement
+}
+
+func (p *Parser) parsePrintStatement() ast.PrintStmt {
+	pos := p.currentPos
+	p.eat(token.PRINT)
+
+	return ast.PrintStmt{
+		Expression: p.parseExpression(),
+		Pos:        pos,
+	}
+}
+
+func (p *Parser) parseAssertStatement() ast.AssertStmt {
+	pos := p.currentPos
+
+	p.eat(token.ASSERT)
+	p.eat(token.LPAREN)
+	statement := ast.AssertStmt{
+		Expression: p.parseExpression(),
+		Pos:        pos,
+	}
+	p.eat(token.RPAREN)
 
 	return statement
 }
