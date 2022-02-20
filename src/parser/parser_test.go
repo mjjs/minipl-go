@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -11,8 +12,8 @@ import (
 var parseTestCases = []struct {
 	name           string
 	lexerOutput    []positionedToken
-	expectedOutput ast.Prog
-	shouldError    bool
+	expectedAST    ast.Prog
+	expectedErrors []error
 }{
 	{
 		name: "Declaration with assignment",
@@ -25,7 +26,7 @@ var parseTestCases = []struct {
 			{token.New(token.INTEGER_LITERAL, "5"), token.Position{Line: 1, Column: 6}},
 			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 7}},
 		},
-		expectedOutput: ast.Prog{
+		expectedAST: ast.Prog{
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.DeclStmt{
@@ -64,7 +65,7 @@ var parseTestCases = []struct {
 			{token.New(token.BOOLEAN, ""), token.Position{Line: 1, Column: 14}},
 			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 15}},
 		},
-		expectedOutput: ast.Prog{
+		expectedAST: ast.Prog{
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.DeclStmt{
@@ -94,7 +95,7 @@ var parseTestCases = []struct {
 			{token.New(token.STRING_LITERAL, "bar"), token.Position{Line: 1, Column: 3}},
 			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 4}},
 		},
-		expectedOutput: ast.Prog{
+		expectedAST: ast.Prog{
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.AssignStmt{
@@ -138,7 +139,7 @@ var parseTestCases = []struct {
 			{token.New(token.FOR, ""), token.Position{Line: 1, Column: 19}},
 			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 20}},
 		},
-		expectedOutput: ast.Prog{
+		expectedAST: ast.Prog{
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.ForStmt{
@@ -205,7 +206,7 @@ var parseTestCases = []struct {
 			{token.New(token.RPAREN, ""), token.Position{Line: 1, Column: 6}},
 			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 7}},
 		},
-		expectedOutput: ast.Prog{
+		expectedAST: ast.Prog{
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.AssertStmt{
@@ -225,16 +226,6 @@ var parseTestCases = []struct {
 				},
 			},
 		},
-	},
-	{
-		name: "Error if no EOF is returned by lexer when expected",
-		lexerOutput: []positionedToken{
-			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 1}},
-			{token.New(token.INTEGER_LITERAL, "22"), token.Position{Line: 1, Column: 2}},
-			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 3}},
-			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 4}},
-		},
-		shouldError: true,
 	},
 	{
 		name: "Parenthesised expressions",
@@ -258,7 +249,7 @@ var parseTestCases = []struct {
 
 			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 13}},
 		},
-		expectedOutput: ast.Prog{
+		expectedAST: ast.Prog{
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.PrintStmt{
@@ -307,7 +298,7 @@ var parseTestCases = []struct {
 			{token.New(token.INTEGER_LITERAL, "2"), token.Position{Line: 1, Column: 8}},
 			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 9}},
 		},
-		expectedOutput: ast.Prog{
+		expectedAST: ast.Prog{
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.DeclStmt{
@@ -368,7 +359,7 @@ var parseTestCases = []struct {
 
 			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 25}},
 		},
-		expectedOutput: ast.Prog{
+		expectedAST: ast.Prog{
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.DeclStmt{
@@ -430,7 +421,7 @@ var parseTestCases = []struct {
 			{token.New(token.RPAREN, ""), token.Position{Line: 1, Column: 5}},
 			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 6}},
 		},
-		expectedOutput: ast.Prog{
+		expectedAST: ast.Prog{
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.PrintStmt{
@@ -450,6 +441,83 @@ var parseTestCases = []struct {
 			},
 		},
 	},
+	// ERRORS
+	{
+		name: "Error if no EOF is returned by lexer when expected",
+		lexerOutput: []positionedToken{
+			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 1}},
+			{token.New(token.INTEGER_LITERAL, "22"), token.Position{Line: 1, Column: 2}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 3}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 4}},
+		},
+		expectedErrors: []error{
+			errors.New("1:4: syntax error: expected EOF got SEMI"),
+		},
+	},
+	{
+		name: "Invalid for loop control block",
+		lexerOutput: []positionedToken{
+			{token.New(token.FOR, ""), token.Position{Line: 1, Column: 1}},
+			{token.New(token.IDENT, "i"), token.Position{Line: 1, Column: 2}},
+			{token.New(token.IN, ""), token.Position{Line: 1, Column: 3}},
+			{token.New(token.DOTDOT, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.INTEGER_LITERAL, "25"), token.Position{Line: 1, Column: 5}},
+			{token.New(token.DO, ""), token.Position{Line: 1, Column: 6}},
+			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 7}},
+			{token.New(token.IDENT, "i"), token.Position{Line: 1, Column: 8}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 9}},
+			{token.New(token.END, ""), token.Position{Line: 1, Column: 10}},
+			{token.New(token.FOR, ""), token.Position{Line: 1, Column: 11}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 12}},
+		},
+		expectedErrors: []error{
+			errors.New("1:4: syntax error: unexpected DOTDOT"),
+		},
+	},
+	{
+		name: "Invalid statements in for loop",
+		lexerOutput: []positionedToken{
+			{token.New(token.FOR, ""), token.Position{Line: 1, Column: 1}},
+			{token.New(token.IDENT, "i"), token.Position{Line: 1, Column: 2}},
+			{token.New(token.IN, ""), token.Position{Line: 1, Column: 3}},
+			{token.New(token.INTEGER_LITERAL, "1"), token.Position{Line: 1, Column: 5}},
+			{token.New(token.DOTDOT, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.INTEGER_LITERAL, "25"), token.Position{Line: 1, Column: 5}},
+			{token.New(token.DO, ""), token.Position{Line: 1, Column: 6}},
+			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 7}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 9}},
+			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 22}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 23}},
+			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 44}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 45}},
+			{token.New(token.END, ""), token.Position{Line: 1, Column: 10}},
+			{token.New(token.FOR, ""), token.Position{Line: 1, Column: 11}},
+			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 12}},
+		},
+		expectedErrors: []error{
+			errors.New("1:9: syntax error: unexpected SEMI"),
+			errors.New("1:23: syntax error: unexpected SEMI"),
+			errors.New("1:45: syntax error: unexpected SEMI"),
+		},
+	},
+	{
+		name:        "Error when no statements are present",
+		lexerOutput: []positionedToken{},
+		expectedErrors: []error{
+			errors.New("99:99: syntax error: unexpected EOF"),
+		},
+	},
+}
+
+func TestParsePanicsWithNilLexer(t *testing.T) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Errorf("Expected a panic")
+		}
+	}()
+
+	New(nil)
 }
 
 func TestParse(t *testing.T) {
@@ -459,16 +527,33 @@ func TestParse(t *testing.T) {
 				testCase.lexerOutput,
 			))
 
-			actual, err := parser.Parse()
-			if testCase.shouldError && err == nil {
-				t.Error("Expected an error, got nil")
-			} else if !testCase.shouldError && err != nil {
-				t.Errorf("Expected nil error, got %v", err)
+			actual, errors := parser.Parse()
+			if len(testCase.expectedErrors) > 0 {
+				if len(testCase.expectedErrors) != len(errors) {
+					t.Errorf(
+						"\nExpected %d error(s) (%s),\ngot %d (%s)",
+						len(testCase.expectedErrors),
+						testCase.expectedErrors,
+						len(errors),
+						errors,
+					)
+				}
+
+				for i, err := range testCase.expectedErrors {
+					actual := errors[i]
+					if actual.Error() != err.Error() {
+						t.Errorf("Expected:\n%s\ngot:\n%s", err.Error(), actual.Error())
+					}
+				}
+			} else if len(testCase.expectedErrors) == 0 && len(errors) > 0 {
+				t.Errorf(
+					"Expected no errors, got %d (%s)",
+					len(errors), errors,
+				)
+			} else if !reflect.DeepEqual(actual, testCase.expectedAST) {
+				t.Errorf("Expected:\n%+#v\ngot:\n%+#v", testCase.expectedAST, actual)
 			}
 
-			if !reflect.DeepEqual(actual, testCase.expectedOutput) {
-				t.Errorf("Expected:\n%+#v\ngot:\n%+#v", testCase.expectedOutput, actual)
-			}
 		})
 	}
 }

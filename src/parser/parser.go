@@ -17,6 +17,8 @@ type Parser struct {
 	lexer        Lexer
 	currentToken token.Token
 	currentPos   token.Position
+
+	errors []error
 }
 
 // New returns a properly initialized pointer instance to a Parser.
@@ -37,18 +39,12 @@ func New(lexer Lexer) *Parser {
 // Parse reads tokens from the lexer and verifies that the program is
 // syntactically valid. An abstract syntax tree and an optional error is
 // returned.
-func (p *Parser) Parse() (ast.Prog, error) {
+func (p *Parser) Parse() (ast.Prog, []error) {
 	statements := p.parseStatements()
 
-	if p.currentToken.Type() != token.EOF {
-		return ast.Prog{}, fmt.Errorf(
-			"Parsing the program failed. Expected %v, found %v",
-			token.EOF,
-			p.currentToken.Type(),
-		)
-	}
+	p.eat(token.EOF)
 
-	return ast.Prog{Statements: statements}, nil
+	return ast.Prog{Statements: statements}, p.errors
 }
 
 // parseStatements goes through all the statements of the lexer and parses
@@ -92,10 +88,13 @@ func (p *Parser) parseStatement() ast.Stmt {
 		statement = p.parseAssertStatement()
 
 	default:
-		panic(fmt.Sprintf("%s: syntax error: unexpected %v", p.currentPos, p.currentToken.Type()))
-	}
+		err := fmt.Errorf(
+			"%s: syntax error: unexpected %v",
+			p.currentPos, p.currentToken.Type(),
+		)
 
-	p.eat(token.SEMI)
+		p.errors = append(p.errors, err)
+	}
 
 	return statement
 }
@@ -103,13 +102,41 @@ func (p *Parser) parseStatement() ast.Stmt {
 func (p *Parser) parseDeclaration() ast.DeclStmt {
 	pos := p.currentPos
 
-	p.eat(token.VAR)
+	if !p.eat(token.VAR) {
+		p.skipStatement()
+		return ast.DeclStmt{}
+	}
+
 	ident := p.currentToken
-	p.eat(token.IDENT)
-	p.eat(token.COLON)
+	if !p.eat(token.IDENT) {
+		p.skipStatement()
+		return ast.DeclStmt{}
+	}
+	if !p.eat(token.COLON) {
+		p.skipStatement()
+		return ast.DeclStmt{}
+	}
+
 	variableType := p.currentToken
-	p.eatType()
+	if !p.currentToken.IsType() {
+		err := fmt.Errorf(
+			"Syntax error: expected a type, got %v",
+			p.currentToken.Type(),
+		)
+
+		p.errors = append(p.errors, err)
+		p.skipStatement()
+		return ast.DeclStmt{}
+	}
+
+	if !p.eat(p.currentToken.Type()) {
+		p.skipStatement()
+		return ast.DeclStmt{}
+	}
+
 	if p.currentToken.Type() != token.ASSIGN {
+		p.eat(token.SEMI)
+
 		return ast.DeclStmt{
 			Identifier:   ident,
 			VariableType: variableType,
@@ -117,8 +144,18 @@ func (p *Parser) parseDeclaration() ast.DeclStmt {
 		}
 	}
 
-	p.eat(token.ASSIGN)
+	if !p.eat(token.ASSIGN) {
+		p.skipStatement()
+		return ast.DeclStmt{}
+	}
+
 	expr := p.parseExpression()
+	if expr == nil {
+		p.skipStatement()
+		return ast.DeclStmt{}
+	}
+
+	p.eat(token.SEMI)
 
 	return ast.DeclStmt{
 		Identifier:   ident,
@@ -133,9 +170,23 @@ func (p *Parser) parseAssignment() ast.AssignStmt {
 
 	ident := p.currentToken
 
-	p.eat(token.IDENT)
-	p.eat(token.ASSIGN)
+	if !p.eat(token.IDENT) {
+		p.skipStatement()
+		return ast.AssignStmt{}
+	}
+
+	if !p.eat(token.ASSIGN) {
+		p.skipStatement()
+		return ast.AssignStmt{}
+	}
+
 	expr := p.parseExpression()
+	if expr == nil {
+		p.skipStatement()
+		return ast.AssignStmt{}
+	}
+
+	p.eat(token.SEMI)
 
 	return ast.AssignStmt{
 		Identifier: ast.Ident{
@@ -149,18 +200,60 @@ func (p *Parser) parseAssignment() ast.AssignStmt {
 
 func (p *Parser) parseForStatement() ast.ForStmt {
 	pos := p.currentPos
-	p.eat(token.FOR)
+
+	if !p.eat(token.FOR) {
+		p.skipForBlock()
+		return ast.ForStmt{}
+	}
+
 	ident := p.currentToken
 	identPos := p.currentPos
-	p.eat(token.IDENT)
-	p.eat(token.IN)
+
+	if !p.eat(token.IDENT) {
+		p.skipForBlock()
+		return ast.ForStmt{}
+	}
+	if !p.eat(token.IN) {
+		p.skipForBlock()
+		return ast.ForStmt{}
+	}
+
 	low := p.parseExpression()
-	p.eat(token.DOTDOT)
+	if low == nil {
+		p.skipForBlock()
+		return ast.ForStmt{}
+	}
+
+	if !p.eat(token.DOTDOT) {
+		p.skipForBlock()
+		return ast.ForStmt{}
+	}
+
 	high := p.parseExpression()
-	p.eat(token.DO)
+	if high == nil {
+		p.skipForBlock()
+		return ast.ForStmt{}
+	}
+
+	if !p.eat(token.DO) {
+		p.skipForBlock()
+		return ast.ForStmt{}
+	}
+
 	statements := p.parseStatements()
-	p.eat(token.END)
-	p.eat(token.FOR)
+
+	if !p.eat(token.END) {
+		p.skipForBlock()
+		return ast.ForStmt{}
+	}
+
+	if !p.eat(token.FOR) {
+		p.skipForBlock()
+		return ast.ForStmt{}
+	}
+
+	p.eat(token.SEMI)
+
 	return ast.ForStmt{
 		Index: ast.Ident{
 			Id:  ident,
@@ -175,7 +268,13 @@ func (p *Parser) parseForStatement() ast.ForStmt {
 
 func (p *Parser) parseReadStatement() ast.ReadStmt {
 	pos := p.currentPos
-	_, identPos := p.eat(token.READ)
+
+	if !p.eat(token.READ) {
+		p.skipStatement()
+		return ast.ReadStmt{}
+	}
+
+	identPos := p.currentPos
 
 	statement := ast.ReadStmt{
 		TargetIdentifier: ast.Ident{
@@ -185,17 +284,33 @@ func (p *Parser) parseReadStatement() ast.ReadStmt {
 		Pos: pos,
 	}
 
-	p.eat(token.IDENT)
+	if !p.eat(token.IDENT) {
+		p.skipStatement()
+		return ast.ReadStmt{}
+	}
+
+	p.eat(token.SEMI)
 
 	return statement
 }
 
 func (p *Parser) parsePrintStatement() ast.PrintStmt {
 	pos := p.currentPos
-	p.eat(token.PRINT)
+	if !p.eat(token.PRINT) {
+		p.skipStatement()
+		return ast.PrintStmt{}
+	}
+
+	expr := p.parseExpression()
+	if expr == nil {
+		p.skipStatement()
+		return ast.PrintStmt{}
+	}
+
+	p.eat(token.SEMI)
 
 	return ast.PrintStmt{
-		Expression: p.parseExpression(),
+		Expression: expr,
 		Pos:        pos,
 	}
 }
@@ -203,13 +318,33 @@ func (p *Parser) parsePrintStatement() ast.PrintStmt {
 func (p *Parser) parseAssertStatement() ast.AssertStmt {
 	pos := p.currentPos
 
-	p.eat(token.ASSERT)
-	p.eat(token.LPAREN)
+	if !p.eat(token.ASSERT) {
+		p.skipStatement()
+		return ast.AssertStmt{}
+	}
+
+	if !p.eat(token.LPAREN) {
+		p.skipStatement()
+		return ast.AssertStmt{}
+	}
+
+	expr := p.parseExpression()
+	if expr == nil {
+		p.skipStatement()
+		return ast.AssertStmt{}
+	}
+
 	statement := ast.AssertStmt{
-		Expression: p.parseExpression(),
+		Expression: expr,
 		Pos:        pos,
 	}
-	p.eat(token.RPAREN)
+
+	if !p.eat(token.RPAREN) {
+		p.skipStatement()
+		return ast.AssertStmt{}
+	}
+
+	p.eat(token.SEMI)
 
 	return statement
 }
@@ -225,14 +360,22 @@ func (p *Parser) parseExpression() ast.Expr {
 		unary := p.currentToken
 		p.eat(token.NOT)
 
+		operand := p.parseOperand()
+		if operand == nil {
+			return nil
+		}
+
 		return ast.UnaryExpr{
 			Unary:   unary,
-			Operand: p.parseOperand(),
+			Operand: operand,
 			Pos:     pos,
 		}
 	}
 
 	left := p.parseOperand()
+	if left == nil {
+		return nil
+	}
 
 	if !p.currentToken.IsOperator() {
 		return ast.NullaryExpr{
@@ -241,9 +384,22 @@ func (p *Parser) parseExpression() ast.Expr {
 	}
 
 	operand := p.currentToken
-	p.eatOperator()
+
+	if !p.currentToken.IsOperator() {
+		err := fmt.Errorf(
+			"Syntax error: expected an operator, got %v",
+			p.currentToken.Type(),
+		)
+		p.errors = append(p.errors, err)
+		return nil
+	}
+
+	p.eat(p.currentToken.Type())
 
 	right := p.parseOperand()
+	if right == nil {
+		return nil
+	}
 
 	return ast.BinaryExpr{
 		Left:     left,
@@ -266,7 +422,11 @@ func (p *Parser) parseOperand() ast.Node {
 	switch p.currentToken.Type() {
 	case token.INTEGER_LITERAL:
 		val := p.currentToken.ValueInt()
-		p.eat(token.INTEGER_LITERAL)
+
+		if !p.eat(token.INTEGER_LITERAL) {
+			return nil
+		}
+
 		return ast.NumberOpnd{
 			Value: val,
 			Pos:   pos,
@@ -274,7 +434,11 @@ func (p *Parser) parseOperand() ast.Node {
 
 	case token.STRING_LITERAL:
 		val := p.currentToken.Value()
-		p.eat(token.STRING_LITERAL)
+
+		if !p.eat(token.STRING_LITERAL) {
+			return nil
+		}
+
 		return ast.StringOpnd{
 			Value: val,
 			Pos:   pos,
@@ -282,58 +446,112 @@ func (p *Parser) parseOperand() ast.Node {
 
 	case token.IDENT:
 		t := p.currentToken
-		p.eat(token.IDENT)
+		if !p.eat(token.IDENT) {
+			return nil
+		}
+
 		return ast.Ident{
 			Id:  t,
 			Pos: pos,
 		}
 
 	case token.LPAREN:
-		p.eat(token.LPAREN)
-		expr := p.parseExpression()
-		p.eat(token.RPAREN)
-		return expr
-	}
+		if !p.eat(token.LPAREN) {
+			return nil
+		}
 
-	panic(fmt.Sprintf("Syntax error: unexpected %v", p.currentToken.Type()))
+		expr := p.parseExpression()
+		if expr == nil {
+			return nil
+		}
+
+		if !p.eat(token.RPAREN) {
+			return nil
+		}
+
+		return expr
+
+	default:
+		err := fmt.Errorf(
+			"%s: syntax error: unexpected %v",
+			pos, p.currentToken.Type(),
+		)
+
+		p.errors = append(p.errors, err)
+		return nil
+	}
 }
 
 // eat checks that the given tokenType corresponds to the currently held token
 // and consumes it. If the tokens do not match, eat panics.
-func (p *Parser) eat(tokenType token.TokenTag) (token.Token, token.Position) {
+func (p *Parser) eat(tokenType token.TokenTag) bool {
+	pos := p.currentPos
+
 	if p.currentToken.Type() == tokenType {
 		p.currentToken, p.currentPos = p.lexer.GetNextToken()
-		return p.currentToken, p.currentPos
-	} else {
-		panic(fmt.Sprintf(
-			"Syntax error: expected %v got %v",
-			tokenType,
-			p.currentToken.Type(),
-		))
+		return true
+	}
+
+	err := fmt.Errorf(
+		"%s: syntax error: expected %v got %v",
+		pos, tokenType, p.currentToken.Type(),
+	)
+
+	p.errors = append(p.errors, err)
+
+	return false
+}
+
+func (p *Parser) skipTo(tokens ...token.TokenTag) {
+	for {
+		if p.currentToken.Type() == token.EOF {
+			return
+		}
+
+		for _, t := range tokens {
+			if p.currentToken.Type() == t {
+				p.currentToken, p.currentPos = p.lexer.GetNextToken()
+				return
+			}
+		}
+
+		p.currentToken, p.currentPos = p.lexer.GetNextToken()
 	}
 }
 
-// eatType consumes a type token. If the current token is not a type token,
-// eatType panics.
-func (p *Parser) eatType() {
-	if !p.currentToken.IsType() {
-		panic(fmt.Sprintf(
-			"Syntax error: expected a type, got %v",
-			p.currentToken.Type(),
-		))
+func (p *Parser) skipStatement() { p.skipTo(token.SEMI) }
+
+func (p *Parser) skipForBlock() {
+	loopDepth := 0
+
+	for {
+		p.currentToken, p.currentPos = p.lexer.GetNextToken()
+
+		if p.currentToken.Type() == token.EOF {
+			return
+		}
+
+		if p.currentToken.Type() == token.FOR {
+			loopDepth++
+			continue
+		}
+
+		if p.currentToken.Type() == token.END {
+			p.currentToken, p.currentPos = p.lexer.GetNextToken()
+
+			if p.currentToken.Type() == token.FOR {
+				p.currentToken, p.currentPos = p.lexer.GetNextToken()
+
+				if p.currentToken.Type() == token.SEMI {
+					loopDepth--
+
+					if loopDepth == 0 {
+						return
+					}
+				}
+			} else {
+				continue
+			}
+		}
 	}
-
-	p.eat(p.currentToken.Type())
-}
-
-// eatOperator consumes an operator token or panics.
-func (p *Parser) eatOperator() {
-	if !p.currentToken.IsOperator() {
-		panic(fmt.Sprintf(
-			"Syntax error: expected an operator, got %v",
-			p.currentToken.Type(),
-		))
-	}
-
-	p.eat(p.currentToken.Type())
 }
