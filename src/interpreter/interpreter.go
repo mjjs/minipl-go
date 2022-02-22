@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/mjjs/minipl-go/ast"
 	"github.com/mjjs/minipl-go/stack"
@@ -82,7 +83,7 @@ func (i *Interpreter) VisitForStmt(node ast.ForStmt) {
 	node.High.Accept(i)
 	high := i.stack.Pop().(int)
 
-	for j := low; j < high; j++ {
+	for j := low; j <= high; j++ {
 		i.variables[idx] = j
 		node.Statements.Accept(i)
 	}
@@ -97,10 +98,16 @@ func (i *Interpreter) VisitReadStmt(node ast.ReadStmt) {
 
 	if _, ok := x.(int); ok {
 		str, _ := r.ReadString('\n')
-		x, _ = strconv.Atoi(str)
+		x, err := strconv.Atoi(strings.Trim(str, "\n"))
+		if err != nil {
+			panic(fmt.Sprintf("It was not an int: %s", err))
+		}
 		i.variables[varName] = x
 	} else if _, ok := x.(string); ok {
-		x, _ = r.ReadString('\n')
+		x, err := r.ReadString('\n')
+		if err != nil {
+			panic(fmt.Sprintf("It was not a string: %s", err))
+		}
 		i.variables[varName] = x
 	} else {
 		panic("WTF NOT A PROPER TYPE (bool not supported yet!)")
