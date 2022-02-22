@@ -1,8 +1,8 @@
 package symboltable
 
 import (
+	"errors"
 	"reflect"
-	"runtime/debug"
 	"testing"
 
 	"github.com/mjjs/minipl-go/ast"
@@ -13,7 +13,7 @@ var symbolCreatorTestCases = []struct {
 	name           string
 	input          ast.Node
 	expectedOutput *SymbolTable
-	shouldPanic    bool
+	expectedErrors []error
 }{
 	// ASSIGNMENTS
 	{
@@ -22,13 +22,18 @@ var symbolCreatorTestCases = []struct {
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.AssignStmt{
-						Identifier: ast.Ident{Id: token.New(token.IDENT, "x")},
+						Identifier: ast.Ident{
+							Id:  token.New(token.IDENT, "x"),
+							Pos: token.Position{Line: 5, Column: 1},
+						},
 						Expression: ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 					},
 				},
 			},
 		},
-		shouldPanic: true,
+		expectedErrors: []error{
+			errors.New("5:1: variable x used before declaration"),
+		},
 	},
 	{
 		name: "Assignment after declaration",
@@ -52,7 +57,6 @@ var symbolCreatorTestCases = []struct {
 				"foo": {STRING},
 			},
 		},
-		shouldPanic: false,
 	},
 	// DECLARATION
 	{
@@ -67,11 +71,14 @@ var symbolCreatorTestCases = []struct {
 					ast.DeclStmt{
 						Identifier:   token.New(token.IDENT, "foo"),
 						VariableType: token.New(token.INTEGER, ""),
+						Pos:          token.Position{Line: 13, Column: 37},
 					},
 				},
 			},
 		},
-		shouldPanic: true,
+		expectedErrors: []error{
+			errors.New("13:37: redeclaration of variable foo"),
+		},
 	},
 	// READ
 	{
@@ -80,12 +87,17 @@ var symbolCreatorTestCases = []struct {
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.ReadStmt{
-						TargetIdentifier: ast.Ident{Id: token.New(token.IDENT, "asd")},
+						TargetIdentifier: ast.Ident{
+							Id:  token.New(token.IDENT, "asd"),
+							Pos: token.Position{Line: 666, Column: 666},
+						},
 					},
 				},
 			},
 		},
-		shouldPanic: true,
+		expectedErrors: []error{
+			errors.New("666:666: variable asd used before declaration"),
+		},
 	},
 	// FOR LOOP
 	{
@@ -94,7 +106,10 @@ var symbolCreatorTestCases = []struct {
 			Statements: ast.Stmts{
 				Statements: []ast.Stmt{
 					ast.ForStmt{
-						Index:      ast.Ident{Id: token.New(token.IDENT, "foo")},
+						Index: ast.Ident{
+							Id:  token.New(token.IDENT, "foo"),
+							Pos: token.Position{Line: 1, Column: 2},
+						},
 						Low:        ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 						High:       ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 1}},
 						Statements: ast.Stmts{},
@@ -102,7 +117,9 @@ var symbolCreatorTestCases = []struct {
 				},
 			},
 		},
-		shouldPanic: true,
+		expectedErrors: []error{
+			errors.New("1:2: variable foo used before declaration"),
+		},
 	},
 	{
 		name: "For loop index modified inside loop",
@@ -122,6 +139,7 @@ var symbolCreatorTestCases = []struct {
 								ast.AssignStmt{
 									Identifier: ast.Ident{Id: token.New(token.IDENT, "i")},
 									Expression: ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 15}},
+									Pos:        token.Position{Line: 7, Column: 2},
 								},
 							},
 						},
@@ -129,7 +147,9 @@ var symbolCreatorTestCases = []struct {
 				},
 			},
 		},
-		shouldPanic: true,
+		expectedErrors: []error{
+			errors.New("7:2: cannot modify loop index i during loop"),
+		},
 	},
 	{
 		name: "For loop index modified after loop",
@@ -158,26 +178,38 @@ var symbolCreatorTestCases = []struct {
 				"i": {INTEGER},
 			},
 		},
-		shouldPanic: false,
 	},
 }
 
 func TestCreateSymbolTable(t *testing.T) {
 	for _, testCase := range symbolCreatorTestCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r == nil && testCase.shouldPanic {
-					t.Error("Expected a panic")
-				} else if r != nil && !testCase.shouldPanic {
-					t.Errorf("Did not expect a panic, got '%v'", r)
-					debug.PrintStack()
-				}
-			}()
-
 			stc := &SymbolTableCreator{}
-			symbols := stc.Create(testCase.input)
+			symbols, errors := stc.Create(testCase.input)
 
-			if !testCase.shouldPanic && !reflect.DeepEqual(symbols, testCase.expectedOutput) {
+			if len(testCase.expectedErrors) > 0 {
+				if len(testCase.expectedErrors) != len(errors) {
+					t.Errorf(
+						"\nExpected %d error(s) (%s),\ngot %d (%s)",
+						len(testCase.expectedErrors),
+						testCase.expectedErrors,
+						len(errors),
+						errors,
+					)
+				}
+
+				for i, err := range testCase.expectedErrors {
+					actual := errors[i]
+					if actual.Error() != err.Error() {
+						t.Errorf("Expected:\n%s\ngot:\n%s", err.Error(), actual.Error())
+					}
+				}
+			} else if len(testCase.expectedErrors) == 0 && len(errors) > 0 {
+				t.Errorf(
+					"Expected no errors, got %d (%s)",
+					len(errors), errors,
+				)
+			} else if !reflect.DeepEqual(symbols, testCase.expectedOutput) {
 				t.Errorf("Expected:\n%+v\ngot:\n%+v", testCase.expectedOutput, symbols)
 			}
 		})

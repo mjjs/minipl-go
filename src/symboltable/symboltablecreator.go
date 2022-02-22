@@ -10,15 +10,17 @@ import (
 type SymbolTableCreator struct {
 	symbols       *SymbolTable
 	lockedSymbols map[string]struct{}
+
+	errors []error
 }
 
-func (stc *SymbolTableCreator) Create(root ast.Node) *SymbolTable {
+func (stc *SymbolTableCreator) Create(root ast.Node) (*SymbolTable, []error) {
 	stc.symbols = NewSymbolTable()
 	stc.lockedSymbols = make(map[string]struct{})
 
 	root.Accept(stc)
 
-	return stc.symbols
+	return stc.symbols, stc.errors
 }
 
 func (stc *SymbolTableCreator) VisitProg(node ast.Prog) {
@@ -35,7 +37,9 @@ func (stc *SymbolTableCreator) VisitDeclStmt(node ast.DeclStmt) {
 	name := node.Identifier.Value()
 	_, exists := stc.symbols.Get(name)
 	if exists {
-		panic(fmt.Errorf("Variable %s has already been declared", name))
+		err := fmt.Errorf("%s: redeclaration of variable %s", node.Position(), name)
+		stc.errors = append(stc.errors, err)
+		return
 	}
 
 	switch node.VariableType.Type() {
@@ -54,10 +58,13 @@ func (stc *SymbolTableCreator) VisitAssignStmt(node ast.AssignStmt) {
 	_, locked := stc.lockedSymbols[node.Identifier.Id.Value()]
 
 	if locked {
-		panic(fmt.Errorf(
-			"Cannot assign to a locked variable %s",
+		err := fmt.Errorf(
+			"%s: cannot modify loop index %s during loop",
+			node.Position(),
 			node.Identifier.Id.Value(),
-		))
+		)
+
+		stc.errors = append(stc.errors, err)
 	}
 }
 
@@ -110,6 +117,7 @@ func (stc *SymbolTableCreator) VisitIdent(node ast.Ident) {
 	name := node.Id.Value()
 	_, exists := stc.symbols.Get(name)
 	if !exists {
-		panic(fmt.Errorf("Variable %s has not been declared", name))
+		err := fmt.Errorf("%s: variable %s used before declaration", node.Position(), name)
+		stc.errors = append(stc.errors, err)
 	}
 }
