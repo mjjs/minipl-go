@@ -12,6 +12,8 @@ import (
 type TypeChecker struct {
 	stack   *stack.Stack
 	symbols *symboltable.SymbolTable
+
+	errors []error
 }
 
 func New(symbols *symboltable.SymbolTable) *TypeChecker {
@@ -21,8 +23,9 @@ func New(symbols *symboltable.SymbolTable) *TypeChecker {
 	}
 }
 
-func (tc *TypeChecker) CheckTypes(root ast.Node) {
+func (tc *TypeChecker) CheckTypes(root ast.Node) []error {
 	root.Accept(tc)
+	return tc.errors
 }
 
 func (tc *TypeChecker) VisitProg(node ast.Prog) {
@@ -53,8 +56,14 @@ func (tc *TypeChecker) VisitDeclStmt(node ast.DeclStmt) {
 
 	node.Expression.Accept(tc)
 
-	if variableType != tc.stack.Pop().(symboltable.SymbolType) {
-		panic("NO MATCH")
+	rhsType := tc.stack.Pop().(symboltable.SymbolType)
+	if variableType != rhsType {
+		err := fmt.Errorf(
+			"%s: cannot assign type %s to variable %s of type %s",
+			node.Position(), rhsType, node.Identifier.Value(), variableType,
+		)
+
+		tc.errors = append(tc.errors, err)
 	}
 }
 
@@ -66,7 +75,12 @@ func (tc *TypeChecker) VisitAssignStmt(node ast.AssignStmt) {
 	exprType := tc.stack.Pop().(symboltable.SymbolType)
 
 	if exprType != idType {
-		panic("Types do not match!")
+		err := fmt.Errorf(
+			"%s: cannot assign type %s to variable %s of type %s",
+			node.Position(), exprType, node.Identifier.Id.Value(), idType,
+		)
+
+		tc.errors = append(tc.errors, err)
 	}
 }
 
@@ -81,13 +95,30 @@ func (tc *TypeChecker) VisitForStmt(node ast.ForStmt) {
 	highType := tc.stack.Pop().(symboltable.SymbolType)
 
 	if indexType != symboltable.INTEGER {
-		panic("INDEX MUST BE INT")
+		err := fmt.Errorf(
+			"%s: loop index must be %s, not %s",
+			node.Position(), symboltable.INTEGER, indexType,
+		)
+
+		tc.errors = append(tc.errors, err)
 	}
+
 	if lowType != symboltable.INTEGER {
-		panic("LOW MUST BE INT")
+		err := fmt.Errorf(
+			"%s: for loop range lower bound must be %s, not %s",
+			node.Position(), symboltable.INTEGER, lowType,
+		)
+
+		tc.errors = append(tc.errors, err)
 	}
+
 	if highType != symboltable.INTEGER {
-		panic("HIGH MUST BE INT")
+		err := fmt.Errorf(
+			"%s: for loop range upper bound must be %s, not %s",
+			node.Position(), symboltable.INTEGER, highType,
+		)
+
+		tc.errors = append(tc.errors, err)
 	}
 }
 
@@ -101,8 +132,14 @@ func (tc *TypeChecker) VisitPrintStmt(node ast.PrintStmt) {
 func (tc *TypeChecker) VisitAssertStmt(node ast.AssertStmt) {
 	node.Expression.Accept(tc)
 
-	if tc.stack.Pop().(symboltable.SymbolType) != symboltable.BOOLEAN {
-		panic("Not a bool")
+	exprType := tc.stack.Pop().(symboltable.SymbolType)
+	if exprType != symboltable.BOOLEAN {
+		err := fmt.Errorf(
+			"%s: assert statement is only defined for type %s, not %s",
+			node.Position(), symboltable.BOOLEAN, exprType,
+		)
+
+		tc.errors = append(tc.errors, err)
 	}
 }
 
@@ -114,37 +151,67 @@ func (tc *TypeChecker) VisitBinaryExpr(node ast.BinaryExpr) {
 	right := tc.stack.Pop().(symboltable.SymbolType)
 
 	if left != right {
-		panic("NO MATCH!")
+		err := fmt.Errorf(
+			"%s: unmatched types %s and %s for binary expression %s",
+			node.Position(), left, right, node.Operator.Type(),
+		)
+
+		tc.errors = append(tc.errors, err)
 	}
 
 	switch node.Operator.Type() {
 	case token.PLUS:
 		if left != symboltable.INTEGER && left != symboltable.STRING {
-			panic(fmt.Errorf("Operator + not defined for type %s", left))
+			err := fmt.Errorf(
+				"%s: operator %s not defined for type %s",
+				node.Position(), token.PLUS, left,
+			)
+
+			tc.errors = append(tc.errors, err)
 		}
 		tc.stack.Push(left)
 
 	case token.MINUS:
 		if left != symboltable.INTEGER {
-			panic(fmt.Errorf("Operator - not defined for type %s", left))
+			err := fmt.Errorf(
+				"%s: operator %s not defined for type %s",
+				node.Position(), token.MINUS, left,
+			)
+
+			tc.errors = append(tc.errors, err)
 		}
 		tc.stack.Push(left)
 
 	case token.MULTIPLY:
 		if left != symboltable.INTEGER {
-			panic(fmt.Errorf("Operator * not defined for type %s", left))
+			err := fmt.Errorf(
+				"%s: operator %s not defined for type %s",
+				node.Position(), token.MULTIPLY, left,
+			)
+
+			tc.errors = append(tc.errors, err)
 		}
 		tc.stack.Push(left)
 
 	case token.INTEGER_DIV:
 		if left != symboltable.INTEGER {
-			panic(fmt.Errorf("Operator / not defined for type %s", left))
+			err := fmt.Errorf(
+				"%s: operator %s not defined for type %s",
+				node.Position(), token.INTEGER_DIV, left,
+			)
+
+			tc.errors = append(tc.errors, err)
 		}
 		tc.stack.Push(left)
 
 	case token.AND:
 		if left != symboltable.BOOLEAN {
-			panic(fmt.Errorf("Operator & not defined for type %s", left))
+			err := fmt.Errorf(
+				"%s: operator %s not defined for type %s",
+				node.Position(), token.AND, left,
+			)
+
+			tc.errors = append(tc.errors, err)
 		}
 
 		tc.stack.Push(left)
@@ -162,8 +229,15 @@ func (tc *TypeChecker) VisitUnaryExpr(node ast.UnaryExpr) {
 	t := tc.stack.Pop().(symboltable.SymbolType)
 
 	if node.Unary.Type() == token.NOT && t != symboltable.BOOLEAN {
-		panic("NOT A symboltable.BOOLEAN")
+		err := fmt.Errorf(
+			"%s: unary operator %s not defined for type %s",
+			node.Position(), token.NOT, t,
+		)
+
+		tc.errors = append(tc.errors, err)
 	}
+
+	tc.stack.Push(t)
 }
 
 func (tc *TypeChecker) VisitNullaryExpr(node ast.NullaryExpr) {
