@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/mjjs/minipl-go/token"
+import "github.com/mjjs/minipl-go/pkg/token"
 
 // Visitor defines an interface for a visitor to the abstract syntax tree.
 // This interface is used for defining separate compiler passes that need to

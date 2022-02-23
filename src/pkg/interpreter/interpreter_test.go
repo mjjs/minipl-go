@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mjjs/minipl-go/ast"
+	"github.com/mjjs/minipl-go/pkg/ast"
 )
 
 var testCases = []struct {

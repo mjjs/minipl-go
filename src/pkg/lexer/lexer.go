@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"unicode"
 
-	"github.com/mjjs/minipl-go/token"
+	"github.com/mjjs/minipl-go/pkg/token"
 )
 
 // reservedKeywords maps the reserved keywords of MiniPL into the tokens for the keywords.

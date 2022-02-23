@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mjjs/minipl-go/ast"
-	"github.com/mjjs/minipl-go/token"
+	"github.com/mjjs/minipl-go/pkg/ast"
+	"github.com/mjjs/minipl-go/pkg/token"
 )
 
 var symbolCreatorTestCases = []struct {

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mjjs/minipl-go/ast"
-	"github.com/mjjs/minipl-go/symboltable"
-	"github.com/mjjs/minipl-go/token"
+	"github.com/mjjs/minipl-go/pkg/ast"
+	"github.com/mjjs/minipl-go/pkg/symboltable"
+	"github.com/mjjs/minipl-go/pkg/token"
 )
 
 var typeCheckerTestCases = []struct {

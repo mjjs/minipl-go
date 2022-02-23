@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mjjs/minipl-go/ast"
-	"github.com/mjjs/minipl-go/stack"
-	"github.com/mjjs/minipl-go/token"
+	"github.com/mjjs/minipl-go/pkg/ast"
+	"github.com/mjjs/minipl-go/pkg/stack"
+	"github.com/mjjs/minipl-go/pkg/token"
 )
 
 type Interpreter struct {
