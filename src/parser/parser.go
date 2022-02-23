@@ -522,17 +522,14 @@ func (p *Parser) skipTo(tokens ...token.TokenTag) {
 func (p *Parser) skipStatement() { p.skipTo(token.SEMI) }
 
 func (p *Parser) skipForBlock() {
-	loopDepth := 0
-
 	for {
-		p.currentToken, p.currentPos = p.lexer.GetNextToken()
-
 		if p.currentToken.Type() == token.EOF {
 			return
 		}
 
 		if p.currentToken.Type() == token.FOR {
-			loopDepth++
+			p.currentToken, p.currentPos = p.lexer.GetNextToken()
+			p.skipForBlock()
 			continue
 		}
 
@@ -543,15 +540,14 @@ func (p *Parser) skipForBlock() {
 				p.currentToken, p.currentPos = p.lexer.GetNextToken()
 
 				if p.currentToken.Type() == token.SEMI {
-					loopDepth--
-
-					if loopDepth == 0 {
-						return
-					}
+					p.currentToken, p.currentPos = p.lexer.GetNextToken()
+					return
 				}
-			} else {
-				continue
 			}
+
+			continue
 		}
+
+		p.currentToken, p.currentPos = p.lexer.GetNextToken()
 	}
 }
