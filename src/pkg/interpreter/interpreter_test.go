@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/mjjs/minipl-go/pkg/ast"
+	"github.com/mjjs/minipl-go/pkg/token"
 )
 
 var testCases = []struct {
@@ -35,6 +36,40 @@ var testCases = []struct {
 		expectedVariables: make(map[string]interface{}),
 		expectedOutput:    bytes.NewBufferString("foo\n666"),
 	},
+	{
+		name: "For loop runs correct number of times",
+		input: ast.Prog{
+			Statements: ast.Stmts{
+				Statements: []ast.Stmt{
+					ast.DeclStmt{
+						Identifier:   token.New(token.IDENT, "i"),
+						VariableType: token.New(token.INTEGER, ""),
+					},
+					ast.ForStmt{
+						Index: ast.Ident{Id: token.New(token.IDENT, "i")},
+						Low:   ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 0}},
+						High:  ast.NullaryExpr{Operand: ast.NumberOpnd{Value: 5}},
+						Statements: ast.Stmts{
+							Statements: []ast.Stmt{
+								ast.PrintStmt{
+									Expression: ast.NullaryExpr{
+										Operand: ast.Ident{Id: token.New(token.IDENT, "i")},
+									},
+								},
+								ast.PrintStmt{
+									Expression: ast.NullaryExpr{
+										Operand: ast.StringOpnd{Value: "\n"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		expectedVariables: map[string]interface{}{"i": 4},
+		expectedOutput:    bytes.NewBufferString("0\n1\n2\n3\n4\n"),
+	},
 }
 
 func TestInterpreter(t *testing.T) {
@@ -46,7 +81,7 @@ func TestInterpreter(t *testing.T) {
 			interpreter.Run(testCase.input)
 
 			if !reflect.DeepEqual(interpreter.variables, testCase.expectedVariables) {
-				t.Errorf("VARIABLES DO NOT MATCH!!!!!!!!1")
+				t.Errorf("Expected variables to be in state %v, got %v", testCase.expectedVariables, interpreter.variables)
 			}
 
 			if w.String() != testCase.expectedOutput.String() {

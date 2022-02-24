@@ -83,7 +83,7 @@ func (i *Interpreter) VisitForStmt(node ast.ForStmt) {
 	node.High.Accept(i)
 	high := i.stack.Pop().(int)
 
-	for j := low; j <= high; j++ {
+	for j := low; j < high; j++ {
 		i.variables[idx] = j
 		node.Statements.Accept(i)
 	}
