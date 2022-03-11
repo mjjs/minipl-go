@@ -1,0 +1,165 @@
+@startuml ast
+  class Prog {
+    Statements : Stmts
+  }
+
+  class "Stmts" as MainStmts {
+    Statements : []Stmt
+  }
+
+  class "PrintStmt" as IntroPrint {
+    Expression : Expr
+  }
+
+  class "NullaryExpr" as IntroExpr {
+    Operand: Node
+  }
+
+  class "StringOpnd" as IntroString {
+    "Give a number"
+  }
+
+  class "DeclStmt" as n {
+    Identifier = "n"
+  }
+
+  class ReadStmt {
+    TargetIdentifier: Ident
+  }
+  class "Ident" as Identn {
+    Identifier = "n"
+  }
+
+  class "DeclStmt" as VDecl {
+    Identifier = "v"
+    Expression: Expr
+  }
+
+  class "NullaryExpr" as VExpr {
+    Operand: Node
+  }
+
+  class "NumberOpnd" as VOpnd {
+    1
+  }
+
+  class "DeclStmt" as i {
+    Identifier = "i"
+  }
+
+  class ForStmt {
+    Index: Ident
+    Low: Expr
+    High: Expr
+    Statements: Stmts
+  }
+  class "Ident" as ForIndex {
+    Identifier = "i"
+  }
+  class "NullaryExpr" as ForLow {
+    Operand: Node
+  }
+  class "NumberOpnd" as ForLowOpnd {
+    1
+  }
+  class "NullaryExpr" as ForHigh {
+    Operand: Node
+  }
+  class "Ident" as ForHighOpnd {
+    Identifier = "n"
+  }
+  class "Stmts" as ForStmts {
+    Statements : []Stmt
+  }
+
+  class AssignStmt {
+    Identifier: Ident
+    Expression: Expr
+  }
+  class "Ident" as AssignIdent {
+    Identifier = "v"
+  }
+  class "BinaryExpr" as AssignExpr {
+    Left: Node
+    Operator = "*"
+    Right: Node
+  }
+  class "Ident" as BinaryLeft {
+    Identifier = "v"
+  }
+  class "Ident" as BinaryRight {
+    Identifier = "i"
+  }
+
+  class "PrintStmt" as PrintResult {
+    Expression: Expr
+  }
+  class "NullaryExpr" as PrintResultExpr {
+    Operand: Node
+  }
+  class "StringOpnd" as PrintResultString {
+    "The result is: "
+  }
+
+  class "PrintStmt" as Printv {
+    Expression: Expr
+  }
+  class "NullaryExpr" as PrintvExpr {
+    Operand: Node
+  }
+  class "Ident" as PrintvIdent {
+    Identifier = "v"
+  }
+
+  Prog <|-- MainStmts
+
+  MainStmts <|-- IntroPrint
+  IntroPrint <|-- IntroExpr
+  IntroExpr <|-- IntroString
+
+  MainStmts <|-- n
+  MainStmts <|-- ReadStmt
+  ReadStmt <|-- Identn
+
+  MainStmts <|-- VDecl
+  VDecl <|-- VExpr
+  VExpr <|-- VOpnd
+
+  MainStmts <|-- i
+
+  MainStmts <|-- ForStmt
+  ForStmt <|-- ForIndex
+  ForStmt <|-- ForLow
+  ForLow <|-- ForLowOpnd
+
+  ForStmt <|-- ForHigh
+  ForHigh <|-- ForHighOpnd
+  ForStmt <|-- ForStmts
+
+  ForStmts <|-- AssignStmt
+  AssignStmt <|-- AssignIdent
+  AssignStmt <|-- AssignExpr
+  AssignExpr <|-- BinaryLeft
+  AssignExpr <|-- BinaryRight
+
+  MainStmts <|-- PrintResult
+  PrintResult <|-- PrintResultExpr
+  PrintResultExpr <|-- PrintResultString
+
+  MainStmts <|-- Printv
+  Printv <|-- PrintvExpr
+  PrintvExpr <|-- PrintvIdent
+@enduml
+
+/'
+print "Give a number";
+var n : int;
+read n;
+var v : int := 1;
+var i : int;
+for i in 1..n do
+v := v * i;
+end for;
+print "The result is: ";
+print v;
+'/

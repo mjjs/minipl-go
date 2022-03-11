@@ -1,0 +1,64 @@
+@startuml architecture
+  participant "Front-end" as FE
+  participant Parser
+  participant Lexer
+  participant "Symbol table creator" as STC
+  participant "Type checker" as TC
+  participant Interpreter
+
+  FE -> FE : Read source
+  FE -> Parser : Invoke
+
+  group loop [until EOF]
+    Parser -> Lexer : Request token
+
+    Lexer -> Lexer : Turn characters into token
+
+    group#DarkSalmon Erroneous token
+      Parser <- Lexer : Error token, Position
+      Parser -> Parser : Create AST node
+      else Else
+      Parser <- Lexer : Token, Position
+      Parser -> Parser : Store error
+      Parser -> Parser : Skip until known good token
+    end
+  end
+
+  FE <- Parser : AST, Syntax errors
+  group#DarkSalmon If errors
+    FE -> FE : Print errors
+    <- FE: Terminate
+  end
+
+  FE -> STC : AST
+
+  group Until every AST node is visited
+    STC -> STC : Add visited symbol to symbol table
+    STC -> STC : Store any errors\n(re-declared variable, assign before declare)
+  end
+
+  FE <- STC: Symbol table, Semantic errors
+  group#DarkSalmon If errors
+    FE -> FE : Print errors
+    <- FE: Terminate
+  end
+
+  FE -> TC : AST, Symbol table
+
+  TC -> TC : Check types for each node in AST\nStore errors
+
+  FE <- TC : Type errors
+  group#DarkSalmon If errors
+    FE -> FE : Print errors
+    <- FE: Terminate
+  end
+
+  FE -> Interpreter : AST, Symbol table
+  group Until every AST node is visited
+    Interpreter -> Interpreter : Execute statements
+    group#DarkSalmon Runtime error
+      <- Interpreter: Terminate
+    end
+  end
+
+@enduml
