@@ -224,7 +224,7 @@ func (p *Parser) parseForStatement() ast.ForStmt {
 		return ast.ForStmt{}
 	}
 
-	if !p.eat(token.DOTDOT) {
+	if !p.eat(token.RANGE) {
 		p.skipForBlock()
 		return ast.ForStmt{}
 	}

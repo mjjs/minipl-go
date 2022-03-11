@@ -215,7 +215,7 @@ var getNextTokenTestCases = []struct {
 	{
 		name:              "Double dot keyword",
 		input:             "..",
-		expectedTokens:    []token.Token{token.New(token.DOTDOT, "")},
+		expectedTokens:    []token.Token{token.New(token.RANGE, "")},
 		expectedPositions: []token.Position{{Line: 1, Column: 1}},
 	},
 	{
@@ -262,7 +262,7 @@ var getNextTokenTestCases = []struct {
 			token.New(token.IDENT, "i"),
 			token.New(token.IN, ""),
 			token.New(token.INTEGER_LITERAL, "1"),
-			token.New(token.DOTDOT, ""),
+			token.New(token.RANGE, ""),
 			token.New(token.IDENT, "n"),
 			token.New(token.DO, ""),
 

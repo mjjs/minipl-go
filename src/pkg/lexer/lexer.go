@@ -110,7 +110,7 @@ func (l *Lexer) GetNextToken() (token.Token, token.Position) {
 			if !eof && next == '.' {
 				l.advance()
 				l.advance()
-				return token.New(token.DOTDOT, ""), pos
+				return token.New(token.RANGE, ""), pos
 			}
 		}
 

@@ -37,11 +37,11 @@ const (
 	COLON  = "COLON"  // :
 
 	// For loop
-	FOR    = "FOR"
-	IN     = "IN"
-	DO     = "DO"
-	END    = "END"
-	DOTDOT = "DOTDOT"
+	FOR   = "FOR"
+	IN    = "IN"
+	DO    = "DO"
+	END   = "END"
+	RANGE = "RANGE"
 
 	ASSERT = "ASSERT"
 	VAR    = "VAR"

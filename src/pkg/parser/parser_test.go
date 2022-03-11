@@ -124,7 +124,7 @@ var parseTestCases = []struct {
 			{token.New(token.INTEGER_LITERAL, "3"), token.Position{Line: 1, Column: 4}},
 			{token.New(token.PLUS, ""), token.Position{Line: 1, Column: 5}},
 			{token.New(token.INTEGER_LITERAL, "2"), token.Position{Line: 1, Column: 6}},
-			{token.New(token.DOTDOT, ""), token.Position{Line: 1, Column: 7}},
+			{token.New(token.RANGE, ""), token.Position{Line: 1, Column: 7}},
 			{token.New(token.INTEGER_LITERAL, "25"), token.Position{Line: 1, Column: 8}},
 			{token.New(token.MINUS, ""), token.Position{Line: 1, Column: 9}},
 			{token.New(token.INTEGER_LITERAL, "1"), token.Position{Line: 1, Column: 10}},
@@ -460,7 +460,7 @@ var parseTestCases = []struct {
 			{token.New(token.FOR, ""), token.Position{Line: 1, Column: 1}},
 			{token.New(token.IDENT, "i"), token.Position{Line: 1, Column: 2}},
 			{token.New(token.IN, ""), token.Position{Line: 1, Column: 3}},
-			{token.New(token.DOTDOT, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.RANGE, ""), token.Position{Line: 1, Column: 4}},
 			{token.New(token.INTEGER_LITERAL, "25"), token.Position{Line: 1, Column: 5}},
 			{token.New(token.DO, ""), token.Position{Line: 1, Column: 6}},
 			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 7}},
@@ -471,7 +471,7 @@ var parseTestCases = []struct {
 			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 12}},
 		},
 		expectedErrors: []error{
-			errors.New("1:4: syntax error: unexpected DOTDOT"),
+			errors.New("1:4: syntax error: unexpected RANGE"),
 		},
 	},
 	{
@@ -481,7 +481,7 @@ var parseTestCases = []struct {
 			{token.New(token.IDENT, "i"), token.Position{Line: 1, Column: 2}},
 			{token.New(token.IN, ""), token.Position{Line: 1, Column: 3}},
 			{token.New(token.INTEGER_LITERAL, "1"), token.Position{Line: 1, Column: 5}},
-			{token.New(token.DOTDOT, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.RANGE, ""), token.Position{Line: 1, Column: 4}},
 			{token.New(token.INTEGER_LITERAL, "25"), token.Position{Line: 1, Column: 5}},
 			{token.New(token.DO, ""), token.Position{Line: 1, Column: 6}},
 			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 7}},
@@ -506,7 +506,7 @@ var parseTestCases = []struct {
 			{token.New(token.FOR, ""), token.Position{Line: 1, Column: 1}},
 			{token.New(token.IDENT, "i"), token.Position{Line: 1, Column: 2}},
 			{token.New(token.IN, ""), token.Position{Line: 1, Column: 3}},
-			{token.New(token.DOTDOT, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.RANGE, ""), token.Position{Line: 1, Column: 4}},
 			{token.New(token.INTEGER_LITERAL, "25"), token.Position{Line: 1, Column: 5}},
 			{token.New(token.DO, ""), token.Position{Line: 1, Column: 6}},
 
@@ -514,7 +514,7 @@ var parseTestCases = []struct {
 			{token.New(token.IDENT, "j"), token.Position{Line: 1, Column: 2}},
 			{token.New(token.IN, ""), token.Position{Line: 1, Column: 3}},
 			{token.New(token.INTEGER_LITERAL, "0"), token.Position{Line: 1, Column: 5}},
-			{token.New(token.DOTDOT, ""), token.Position{Line: 1, Column: 4}},
+			{token.New(token.RANGE, ""), token.Position{Line: 1, Column: 4}},
 			{token.New(token.INTEGER_LITERAL, "1"), token.Position{Line: 1, Column: 5}},
 			{token.New(token.DO, ""), token.Position{Line: 1, Column: 6}},
 			{token.New(token.PRINT, ""), token.Position{Line: 1, Column: 7}},
@@ -531,7 +531,7 @@ var parseTestCases = []struct {
 			{token.New(token.SEMI, ""), token.Position{Line: 1, Column: 12}},
 		},
 		expectedErrors: []error{
-			errors.New("1:4: syntax error: unexpected DOTDOT"),
+			errors.New("1:4: syntax error: unexpected RANGE"),
 		},
 	},
 	{

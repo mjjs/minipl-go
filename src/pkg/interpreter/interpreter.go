@@ -18,10 +18,16 @@ type Interpreter struct {
 
 	variables    map[string]interface{}
 	outputWriter io.Writer
+	inputReader  io.Reader
 }
 
-func New() *Interpreter {
-	return NewWithOutputWriter(os.Stdin)
+func New(outputWriter io.Writer, inputReader io.Reader) *Interpreter {
+	return &Interpreter{
+		stack:        stack.New(),
+		variables:    make(map[string]interface{}),
+		outputWriter: outputWriter,
+		inputReader:  inputReader,
+	}
 }
 
 func NewWithOutputWriter(output io.Writer) *Interpreter {
@@ -94,23 +100,23 @@ func (i *Interpreter) VisitReadStmt(node ast.ReadStmt) {
 
 	x := i.variables[varName]
 
-	r := bufio.NewReader(os.Stdin)
+	r := bufio.NewReader(i.inputReader)
 
 	if _, ok := x.(int); ok {
 		str, _ := r.ReadString('\n')
 		x, err := strconv.Atoi(strings.Trim(str, "\n"))
 		if err != nil {
-			panic(fmt.Sprintf("It was not an int: %s", err))
+			i.terminate(fmt.Sprintf("%s: runtime error: failed to parse integer", node.Position()))
 		}
 		i.variables[varName] = x
 	} else if _, ok := x.(string); ok {
 		x, err := r.ReadString('\n')
 		if err != nil {
-			panic(fmt.Sprintf("It was not a string: %s", err))
+			i.terminate(fmt.Sprintf("%s: runtime error: failed to parse string", node.Position()))
 		}
 		i.variables[varName] = x
 	} else {
-		panic("WTF NOT A PROPER TYPE (bool not supported yet!)")
+		i.terminate(fmt.Sprintf("%s: runtime error: could not read user input", node.Position()))
 	}
 }
 
@@ -118,10 +124,11 @@ func (i *Interpreter) VisitPrintStmt(node ast.PrintStmt) {
 	node.Expression.Accept(i)
 	fmt.Fprint(i.outputWriter, i.stack.Pop())
 }
+
 func (i *Interpreter) VisitAssertStmt(node ast.AssertStmt) {
 	node.Expression.Accept(i)
 	if !i.stack.Pop().(bool) {
-		panic("ASSERT FAILED!")
+		i.terminate(fmt.Sprintf("%s: runtime error: assert failed", node.Position()))
 	}
 }
 
@@ -206,7 +213,7 @@ func (i *Interpreter) VisitBinaryExpr(node ast.BinaryExpr) {
 		return
 
 	default:
-		panic(fmt.Sprintf("Unsupported operator %v", operator))
+		panic(fmt.Sprintf("Encountered an unsupported operator %v", operator))
 	}
 
 	panic(fmt.Sprintf("Unsupported operands %v and %v for operator %v", left, right, operator))
@@ -238,4 +245,9 @@ func (i *Interpreter) VisitStringOpnd(node ast.StringOpnd) {
 
 func (i *Interpreter) VisitIdent(node ast.Ident) {
 	i.stack.Push(i.variables[node.Id.Value()])
+}
+
+func (i *Interpreter) terminate(message string) {
+	fmt.Fprintln(i.outputWriter, message)
+	os.Exit(1)
 }
