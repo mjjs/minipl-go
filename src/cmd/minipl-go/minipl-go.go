@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -14,11 +13,6 @@ func main() {
 
 	filePath := os.Args[1]
 
-	sourceCode, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		panic(err)
-	}
-
 	fe := &frontEnd{}
-	fe.Execute(string(sourceCode))
+	fe.Execute(filePath)
 }
